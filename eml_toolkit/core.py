@@ -1,114 +1,178 @@
 """
-eml_toolkit.core
-----------------
-Opérateurs de base eml et eml★.
+eml_toolkit/core.py
+Core operators for the eml★ system.
 
-eml(x, y)  = exp(x) - ln(y)       [Odrzywołek 2026]
-eml★(x, y) = exp(x) - ln(conj(y)) [Monnerot 2026]
+eml(x, y)  = exp(x) - ln(y)        [Odrzywołek 2026, arXiv:2603.21852v2]
+eml★(x, y) = exp(x) - ln(conj(y))  [Monnerot 2026]
 
-Théorème 3.1 (vérifié à 50 décimales) :
-    z̄ = 1 - eml★(0, eml(z, 1))   pour Im(z) ∈ [-π, π)
+Reference: Zenodo DOI:10.5281/zenodo.19183008
 """
-
 import mpmath
-import sympy as sp
-from typing import Any, List, Optional
 
-# Précision par défaut
+# Default precision: 50 decimal places
 mpmath.mp.dps = 50
 
 
-def eml(x: Any, y: Any) -> Any:
-    """eml(x, y) = exp(x) - ln(y)  [Odrzywołek 2026]"""
-    if isinstance(x, (int, float, mpmath.mpf, mpmath.mpc)) and \
-       isinstance(y, (int, float, mpmath.mpf, mpmath.mpc)):
-        return mpmath.exp(x) - mpmath.log(y)
-    if isinstance(x, sp.Expr) or isinstance(y, sp.Expr):
-        return sp.exp(x) - sp.log(y)
-    raise TypeError(f"eml: types non supportés ({type(x)}, {type(y)})")
+# ── Core operators ─────────────────────────────────────────────────────────────
 
-
-def eml_star(x: Any, y: Any) -> Any:
-    """eml★(x, y) = exp(x) - ln(conj(y))  [Monnerot 2026]"""
-    if isinstance(x, (int, float, mpmath.mpf, mpmath.mpc)) and \
-       isinstance(y, (int, float, mpmath.mpf, mpmath.mpc)):
-        return mpmath.exp(x) - mpmath.log(mpmath.conj(y))
-    if isinstance(x, sp.Expr) or isinstance(y, sp.Expr):
-        return sp.exp(x) - sp.log(sp.conjugate(y))
-    raise TypeError(f"eml★: types non supportés ({type(x)}, {type(y)})")
-
-
-def conjugate_formula(z: Any) -> Any:
+def eml(x, y):
     """
-    z̄ = 1 - eml★(0, eml(z, 1))
-    Formule de conjugaison à profondeur 2 (Théorème 3.1).
-    Valide pour Im(z) ∈ [-π, π).
+    EML Sheffer operator: eml(x, y) = exp(x) - ln(y).
+    Generates all classical elementary functions when composed with constant 1.
+    Holomorphic by construction.
     """
-    return 1 - eml_star(0, eml(z, 1))
+    return mpmath.exp(x) - mpmath.log(y)
 
 
-class EMLExpression:
+def eml_star(x, y):
     """
-    Représentation symbolique d'une expression {eml, eml★, 1}.
-    Permet l'optimisation DAG + CSE et l'évaluation haute précision.
+    eml★ anti-holomorphic extension: eml★(x, y) = exp(x) - ln(conj(y)).
+    Injects anti-holomorphic structure into the Sheffer basis.
+    Minimal change: single conjugate on the second argument.
     """
-
-    def __init__(self, expr: Any, variables: Optional[List[str]] = None):
-        self.expr = expr
-        self.variables = variables or []
-        self._optimized = False
-
-    @classmethod
-    def from_sympy(cls, sympy_expr, variables=None):
-        if isinstance(sympy_expr, str):
-            sympy_expr = sp.sympify(sympy_expr)
-        vars_in_expr = [str(v) for v in sympy_expr.free_symbols]
-        return cls(sympy_expr, variables or vars_in_expr)
-
-    def to_sympy(self) -> sp.Expr:
-        return self.expr
-
-    @property
-    def node_count(self) -> int:
-        code = str(self.expr)
-        return sum(code.count(op) for op in ['+', '*', '/', '**']) + 2
-
-    def optimize(self, method: str = "egraph") -> "EMLExpression":
-        from .optimizer import optimize_eml
-        optimized_expr = optimize_eml(self.expr, method=method)
-        new = EMLExpression(optimized_expr, self.variables)
-        new._optimized = True
-        return new
-
-    def evaluate(self, **kwargs) -> Any:
-        local_dict = {
-            k: mpmath.mpc(v) if isinstance(v, complex) else mpmath.mpf(v)
-            for k, v in kwargs.items()
-        }
-        return self.expr.evalf(subs=local_dict) if hasattr(self.expr, 'evalf') else self.expr
-
-    def __repr__(self):
-        status = "optimized" if self._optimized else "raw"
-        return f"EMLExpression({status}, nodes≈{self.node_count}, vars={self.variables})"
-
-    def __str__(self):
-        return str(self.expr)
+    return mpmath.exp(x) - mpmath.log(mpmath.conj(y))
 
 
-def fold_to_band(z: Any) -> Any:
+# ── EML arithmetic trees (source: eml_compiler_v4.py, Zenodo) ─────────────────
+
+ONE = mpmath.mpc(1)
+
+
+def eml_exp(z):
+    """exp(z) via EML tree, K=1."""
+    return eml(z, ONE)
+
+
+def eml_ln(z):
+    """ln(z) via EML tree, K=3."""
+    return eml(ONE, eml(eml(ONE, z), ONE))
+
+
+def eml_zero():
+    """Constant 0 via EML tree, K=3."""
+    return eml(ONE, eml(eml(ONE, ONE), ONE))
+
+
+def eml_neg(z):
+    """Negation -z via EML tree, K=8."""
+    return eml(eml(ONE, eml(eml(ONE, eml_zero()), ONE)), eml(z, ONE))
+
+
+def eml_sub(a, b):
+    """Subtraction a - b via EML tree, K=5."""
+    return eml(eml_ln(a), eml_exp(b))
+
+
+def eml_add(a, b):
+    """Addition a + b via EML tree, K=13."""
+    return eml_sub(a, eml_neg(b))
+
+
+def eml_inv(z):
+    """Reciprocal 1/z via EML tree, K=12."""
+    return eml_exp(eml_neg(eml_ln(z)))
+
+
+def eml_mul(a, b):
+    """Multiplication a * b via EML tree, K=20."""
+    return eml_exp(eml_add(eml_ln(a), eml_ln(b)))
+
+
+def eml_div(a, b):
+    """Division a / b via EML tree."""
+    return eml_mul(a, eml_inv(b))
+
+
+def eml_pow(a, b):
+    """Power a^b via EML tree."""
+    return eml_exp(eml_mul(b, eml_ln(a)))
+
+
+# ── eml★ formulas (Monnerot 2026) ─────────────────────────────────────────────
+
+def conjugate_formula(z):
     """
-    φ(z) = 1 − eml★(0, eml(z, 1))  — folding vers la bande [−π, π).
+    Complex conjugate via eml★ (Theorem 3.1).
 
-    Empirical folding property (Remark 3.5, Monnerot 2026):
-    Une seule application ramène Im(φ(z)) dans [−π, π) pour tout z ∈ ℂ,
-    via la branche principale du logarithme.
+    z_bar = 1 - eml★(0, eml(z, 1))
 
-    Vérifié à 60 décimales sur 10⁴ points avec |Im(z)| jusqu'à 100.
-    Note : φ(z) ≠ z̄ hors bande — c'est un proxy numérique, pas la
-    conjugaison exacte. L'erreur est un multiple entier de 2πi.
+    Valid for Im(z) in (-pi, pi).
+    Returns z_bar with error < 10^-50 for Im(z) strictly inside the strip.
+    Outside the strip: error = n * 2*pi*i for integer n (branch jump).
     """
-    if isinstance(z, (int, float, mpmath.mpf, mpmath.mpc)):
-        z = mpmath.mpc(z)
-        ez = eml(z, mpmath.mpc(1))
-        return mpmath.mpc(1) - eml_star(mpmath.mpc(0), ez)
-    raise TypeError(f"fold_to_band: type non supporté ({type(z)})")
+    return 1 - eml_star(mpmath.mpc(0), eml(z, ONE))
+
+
+def real_part(z):
+    """
+    Real part Re(z) via eml★, relative depth 3.
+    Re(z) = (z + conj(z)) / 2
+    Valid for Im(z) in (-pi, pi).
+    """
+    return (z + conjugate_formula(z)) / 2
+
+
+def imag_part(z):
+    """
+    Imaginary part Im(z) via eml★, relative depth 3.
+    Im(z) = (z - conj(z)) / (2i)
+    Valid for Im(z) in (-pi, pi).
+    """
+    return (z - conjugate_formula(z)) / (2 * mpmath.j)
+
+
+def modulus_squared(z):
+    """
+    |z|^2 via eml★, relative depth 3.
+    |z|^2 = z * conj(z)
+    Valid for Im(z) in (-pi, pi).
+    """
+    return z * conjugate_formula(z)
+
+
+def modulus(z):
+    """
+    |z| via eml★, relative depth 4.
+    |z| = sqrt(z * conj(z))
+    Valid for Im(z) in (-pi, pi).
+    """
+    return mpmath.sqrt(modulus_squared(z))
+
+
+# ── Alternative: {eml, Re, 1} basis (Grok's proposal) ────────────────────────
+
+def alt_conjugate(z):
+    """
+    Complex conjugate via {eml, Re, 1} basis.
+    z_bar = 2 * Re(z) - z
+    Unconditional (no strip restriction).
+    """
+    return 2 * mpmath.re(z) - z
+
+
+def alt_modulus_squared(z):
+    """
+    |z|^2 via {eml, Re, 1} basis.
+    |z|^2 = Re(z)^2 + Im(z)^2
+    Unconditional.
+    """
+    return mpmath.re(z) ** 2 + mpmath.im(z) ** 2
+
+
+# ── Utility ────────────────────────────────────────────────────────────────────
+
+def is_in_strip(z, margin=1e-10):
+    """Check whether Im(z) is strictly inside (-pi, pi)."""
+    return abs(float(mpmath.im(z))) < float(mpmath.pi) - margin
+
+
+if __name__ == "__main__":
+    print("eml_toolkit/core.py — sanity check")
+    z = mpmath.mpc(1.5, 0.8)
+    print(f"  z          = {z}")
+    print(f"  conj(z)    = {conjugate_formula(z)}")
+    print(f"  Re(z)      = {real_part(z)}")
+    print(f"  Im(z)      = {imag_part(z)}")
+    print(f"  |z|^2      = {modulus_squared(z)}")
+    print(f"  |z|        = {modulus(z)}")
+    print(f"  Expected:    conj={mpmath.conj(z)}, Re={mpmath.re(z)}, Im={mpmath.im(z)}")

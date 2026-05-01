@@ -1,128 +1,218 @@
 """
-eml_toolkit.conjecture_explorer
---------------------------------
-Explorateur heuristique de conjectures pour {eml, eml★, 1}.
+eml_toolkit/conjecture_explorer.py
+Heuristic conjecture explorer for {eml, eml★, 1}.
 
-Note : ceci est une exploration aléatoire parallèle (random search),
-PAS un vrai Monte Carlo Tree Search (pas d'arbre UCB, pas de
-backpropagation). Le nom a été corrigé pour honnêteté mathématique.
+Generates random candidate expressions, evaluates them numerically at high
+precision, and checks whether they match a given target.
 
-Utile pour :
-- Chercher des identités inconnues dans le système eml/eml★
-- Valider numériquement des conjectures à haute précision
-- Explorer l'espace des expressions de profondeur ≤ max_depth
+This is a parallel random search over the space of eml/eml★ expression trees.
+Useful for:
+  - Discovering unknown identities in the eml / eml★ system
+  - Numerically validating conjectures at 50+ decimal places
+  - Exploring the expression space up to a given depth
 
-Auteur : Anthony Monnerot (2026)
+Author: Anthony Monnerot (2026)
+Extension of: Odrzywołek (arXiv:2603.21852v2)
 """
 
-import multiprocessing
 import random
 import mpmath
-import sympy as sp
-from sympy import symbols, simplify, exp, log, conjugate
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
-from .optimizer import EGraphOptimizer
+try:
+    from eml_toolkit.core import (
+        eml, eml_star, eml_exp, eml_ln, eml_zero, eml_neg,
+        eml_sub, eml_add, eml_mul, conjugate_formula,
+    )
+except ImportError:
+    ONE = mpmath.mpc(1)
+    def eml(x, y):       return mpmath.exp(x) - mpmath.log(y)
+    def eml_star(x, y):  return mpmath.exp(x) - mpmath.log(mpmath.conj(y))
+    def eml_exp(z):      return eml(z, ONE)
+    def eml_ln(z):       return eml(ONE, eml(eml(ONE, z), ONE))
+    def eml_zero():      return eml(ONE, eml(eml(ONE, ONE), ONE))
+    def eml_neg(z):      return eml(eml(ONE, eml(eml(ONE, eml_zero()), ONE)), eml(z, ONE))
+    def eml_sub(a, b):   return eml(eml_ln(a), eml_exp(b))
+    def eml_add(a, b):   return eml_sub(a, eml_neg(b))
+    def eml_mul(a, b):   return eml_exp(eml_add(eml_ln(a), eml_ln(b)))
+    def conjugate_formula(z): return 1 - eml_star(mpmath.mpc(0), eml(z, mpmath.mpc(1)))
 
-s = symbols('s')
-
-_EPS = mpmath.mpf('1e-40')
+_EPS = mpmath.mpf("1e-40")
 
 
-class ConjectureExplorer:
+# ── Random expression generator ────────────────────────────────────────────────
+
+def _random_leaf(z, rng):
+    """Return a random terminal: z, 1, 0, or a small integer."""
+    choice = rng.randint(0, 3)
+    if choice == 0:
+        return z
+    elif choice == 1:
+        return mpmath.mpc(1)
+    elif choice == 2:
+        return mpmath.mpc(0)
+    else:
+        return mpmath.mpc(rng.choice([2, -1, 3]))
+
+
+def _random_expr(z, depth, max_depth, rng):
     """
-    Explorateur heuristique parallèle pour conjectures eml/eml★.
-
-    Génère aléatoirement des expressions candidates, les optimise
-    via EGraphOptimizer, et vérifie si elles approchent une cible.
+    Recursively build a random eml / eml★ expression tree.
 
     Parameters
     ----------
-    max_depth    : profondeur maximale des arbres eml générés
-    num_rollouts : nombre de candidats à évaluer
-    num_workers  : nombre de processus parallèles
-    dps          : précision mpmath (décimales)
+    z         : the input value (mpmath complex number)
+    depth     : current recursion depth
+    max_depth : maximum allowed depth
+    rng       : random.Random instance for reproducibility
+    """
+    if depth >= max_depth:
+        return _random_leaf(z, rng)
+
+    op = rng.choice(["eml", "eml_star", "leaf"])
+    if op == "leaf":
+        return _random_leaf(z, rng)
+    elif op == "eml":
+        left  = _random_expr(z, depth + 1, max_depth, rng)
+        right = _random_expr(z, depth + 1, max_depth, rng)
+        try:
+            return eml(left, right)
+        except Exception:
+            return _random_leaf(z, rng)
+    else:  # eml_star
+        left  = _random_expr(z, depth + 1, max_depth, rng)
+        right = _random_expr(z, depth + 1, max_depth, rng)
+        try:
+            return eml_star(left, right)
+        except Exception:
+            return _random_leaf(z, rng)
+
+
+# ── Single-candidate evaluator (runs in worker process) ───────────────────────
+
+def _evaluate_one(args):
+    """
+    Evaluate one random candidate against the target.
+
+    Returns (candidate_value, error) if error < EPS, else None.
+    """
+    seed, z_re, z_im, target_re, target_im, max_depth, dps = args
+    mpmath.mp.dps = dps
+    rng = random.Random(seed)
+    z      = mpmath.mpc(z_re, z_im)
+    target = mpmath.mpc(target_re, target_im)
+    try:
+        val = _random_expr(z, 0, max_depth, rng)
+        err = abs(val - target)
+        if err < _EPS:
+            return (val, float(err))
+    except Exception:
+        pass
+    return None
+
+
+# ── ConjectureExplorer class ───────────────────────────────────────────────────
+
+class ConjectureExplorer:
+    """
+    Parallel heuristic explorer for eml / eml★ conjectures.
+
+    Generates random candidate expressions and checks whether any of them
+    numerically matches a given target function at a test point.
+
+    Parameters
+    ----------
+    max_depth    : maximum depth of the random expression trees
+    num_rollouts : total number of random candidates to evaluate
+    num_workers  : number of parallel worker processes
+    dps          : mpmath precision in decimal places
     """
 
     def __init__(
         self,
-        max_depth: int = 5,
-        num_rollouts: int = 100,
+        max_depth: int = 4,
+        num_rollouts: int = 200,
         num_workers: int = 4,
         dps: int = 50,
     ):
-        self.optimizer = EGraphOptimizer()
-        self.max_depth = max_depth
+        self.max_depth    = max_depth
         self.num_rollouts = num_rollouts
-        self.num_workers = num_workers
-        self.dps = dps
-        self.results = []
+        self.num_workers  = num_workers
+        self.dps          = dps
+        self.results      = []
 
-    def _random_eml_expression(self, depth: int = 0):
-        """Génère une expression eml/eml★ aléatoire jusqu'à max_depth."""
-        if depth >= self.max_depth:
-            return s ** 2 + symbols('b') * s + symbols('c')
-
-        op = random.choice(['eml', 'eml_star', 'conj', 'poly'])
-        if op == 'eml':
-            return exp(s) - log(s ** 2 + 1)
-        elif op == 'eml_star':
-            return exp(s) - log(conjugate(s ** 2 + 1))
-        elif op == 'conj':
-            # z̄ = 1 − eml★(0, eml(z, 1))
-            return 1 - (exp(0) - log(conjugate(exp(s) - log(1))))
-        else:
-            return s ** 2 + symbols('b') * s + symbols('c')
-
-    def _evaluate_candidate(self, args):
-        """Évalue un candidat contre la cible (appelé en sous-processus)."""
-        target, dps = args
-        mpmath.mp.dps = dps
-        candidate = self._random_eml_expression()
-        try:
-            optimized = self.optimizer.optimize(candidate)
-            diff = simplify(candidate - optimized)
-            if diff == 0:
-                err = mpmath.fabs(mpmath.re(optimized - target))
-                if err < _EPS:
-                    return (str(candidate), str(optimized), float(err))
-        except Exception:
-            pass
-        return None
-
-    def explore(self, target):
+    def explore(self, target_fn, test_point=None):
         """
-        Lance l'exploration parallèle.
+        Launch parallel exploration for a target function.
 
         Parameters
         ----------
-        target : expression sympy cible à approcher
+        target_fn  : callable z -> mpmath complex, the function to match
+        test_point : mpmath complex test point (default: Euler-Mascheroni + 0.3i)
 
         Returns
         -------
-        list of (candidate_str, optimized_str, error_float)
-            Les 10 meilleurs résultats triés par erreur croissante.
+        list of (value, error) sorted by increasing error
         """
         mpmath.mp.dps = self.dps
+
+        if test_point is None:
+            test_point = mpmath.mpc(float(mpmath.euler), 0.3)
+
+        target_val = target_fn(test_point)
+        z_re       = float(mpmath.re(test_point))
+        z_im       = float(mpmath.im(test_point))
+        t_re       = float(mpmath.re(target_val))
+        t_im       = float(mpmath.im(target_val))
+
+        args_list = [
+            (seed, z_re, z_im, t_re, t_im, self.max_depth, self.dps)
+            for seed in range(self.num_rollouts)
+        ]
+
         self.results = []
+        with ProcessPoolExecutor(max_workers=self.num_workers) as pool:
+            futures = [pool.submit(_evaluate_one, a) for a in args_list]
+            for f in as_completed(futures):
+                res = f.result()
+                if res is not None:
+                    self.results.append(res)
 
-        args_list = [(target, self.dps)] * self.num_rollouts
-
-        with multiprocessing.Pool(self.num_workers) as pool:
-            raw = pool.map(self._evaluate_candidate, args_list)
-
-        self.results = sorted(
-            [r for r in raw if r is not None],
-            key=lambda x: x[2]
-        )[:10]
-
-        return self.results
+        self.results.sort(key=lambda x: x[1])
+        return self.results[:10]
 
     def report(self):
-        """Affiche les résultats de l'exploration."""
+        """Print the top exploration results."""
         if not self.results:
-            print("Aucun résultat trouvé.")
+            print("No matching candidates found.")
             return
-        print(f"{'Rang':>4}  {'Erreur':>12}  Expression optimisée")
-        print("-" * 60)
-        for i, (cand, opt, err) in enumerate(self.results, 1):
-            print(f"{i:>4}  {err:>12.3e}  {opt}")
+        print(f"{'Rank':>4}  {'Error':>14}  Value")
+        print("-" * 55)
+        for i, (val, err) in enumerate(self.results[:10], 1):
+            print(f"{i:>4}  {err:>14.3e}  {val}")
+
+
+# ── Entry point ────────────────────────────────────────────────────────────────
+
+if __name__ == "__main__":
+    print("ConjectureExplorer — demo: searching for conj(z)")
+    print()
+
+    explorer = ConjectureExplorer(
+        max_depth=3,
+        num_rollouts=500,
+        num_workers=4,
+        dps=50,
+    )
+
+    results = explorer.explore(
+        target_fn=mpmath.conj,
+        test_point=mpmath.mpc(1.2, 0.8),
+    )
+
+    if results:
+        print(f"Found {len(results)} matching candidate(s):")
+        explorer.report()
+    else:
+        print("No exact match found in this run.")
+        print("(Expected: the conjugate formula 1 - eml★(0, eml(z,1)) may appear)")

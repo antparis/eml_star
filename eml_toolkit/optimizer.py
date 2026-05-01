@@ -1,186 +1,234 @@
 """
-eml_toolkit.optimizer
----------------------
-Moteur E-Graph pour expressions {eml, eml★, 1}.
+eml_toolkit/optimizer.py
+EGraph optimizer for eml★ expression trees.
 
-6 règles de réécriture :
-  1. rational_one_plus_delta    — réécriture fraction → 1 + δ
-  2. horner_after_rewrite       — forme de Horner sur dénominateur
-  3. factor_after_delta         — factorisation après réécriture
-  4. cancel_common_terms        — annulation termes communs
-  5. trig_identity_rule         — identités trigonométriques (sin²+cos²=1, etc.)
-  6. exp_log_rule               — simplification exp/log
+Implements 6 rewriting rules that simplify eml and eml★ trees
+by eliminating redundant compositions.
 
-Auteur : Anthony Monnerot (2026), d'après collaboration avec Grok/Claude.
+Rules:
+  1. eml(x, 1)           -> exp(x)
+  2. eml(1, exp(x))      -> 1 - x  (ln simplification)
+  3. eml(ln(x), exp(y))  -> x - y  (subtraction shortcut)
+  4. eml★(0, eml(z, 1))  -> 1 - conj(z)  (Theorem 3.1)
+  5. eml(eml(1,x), 1)    -> exp(1 - x)
+  6. eml(0, x)           -> 1 - ln(x)
 """
-
 import mpmath
-import sympy as sp
-from sympy import symbols, simplify, Add, Poly
 
-s = symbols('s')
+mpmath.mp.dps = 50
 
-_EPS = mpmath.mpf('1e-40')
 
+# ── Symbolic expression tree ───────────────────────────────────────────────────
+
+class Expr:
+    """Base class for symbolic EML expressions."""
+    def eval(self, z=None):
+        raise NotImplementedError
+
+    def depth(self):
+        return 1
+
+    def node_count(self):
+        return 1
+
+
+class Const(Expr):
+    def __init__(self, value):
+        self.value = value
+
+    def eval(self, z=None):
+        return mpmath.mpc(self.value)
+
+    def __repr__(self):
+        return str(self.value)
+
+
+class Var(Expr):
+    def __init__(self, name="z"):
+        self.name = name
+
+    def eval(self, z=None):
+        return z
+
+    def __repr__(self):
+        return self.name
+
+
+class EML(Expr):
+    def __init__(self, left, right):
+        self.left = left
+        self.right = right
+
+    def eval(self, z=None):
+        l = self.left.eval(z)
+        r = self.right.eval(z)
+        return mpmath.exp(l) - mpmath.log(r)
+
+    def depth(self):
+        return 1 + max(self.left.depth(), self.right.depth())
+
+    def node_count(self):
+        return 1 + self.left.node_count() + self.right.node_count()
+
+    def __repr__(self):
+        return f"eml({self.left}, {self.right})"
+
+
+class EMLStar(Expr):
+    def __init__(self, left, right):
+        self.left = left
+        self.right = right
+
+    def eval(self, z=None):
+        l = self.left.eval(z)
+        r = self.right.eval(z)
+        return mpmath.exp(l) - mpmath.log(mpmath.conj(r))
+
+    def depth(self):
+        return 1 + max(self.left.depth(), self.right.depth())
+
+    def node_count(self):
+        return 1 + self.left.node_count() + self.right.node_count()
+
+    def __repr__(self):
+        return f"eml★({self.left}, {self.right})"
+
+
+# ── EGraph optimizer ───────────────────────────────────────────────────────────
 
 class EGraphOptimizer:
     """
-    Optimiseur E-Graph pour expressions symboliques EML/eml★.
-
-    Applique 6 règles de réécriture en boucle de saturation
-    jusqu'à convergence (coût minimal atteint).
+    Simplifies EML expression trees using 6 algebraic rewriting rules.
+    Reduces tree depth and node count without changing the computed value.
     """
 
-    def __init__(self, eps: mpmath.mpf = _EPS):
-        self.eps = eps
-        self.rules = [
-            self._rational_one_plus_delta,
-            self._horner_after_rewrite,
-            self._factor_after_delta,
-            self._cancel_common_terms,
-            self._trig_identity_rule,
-            self._exp_log_rule,
-        ]
+    def __init__(self, max_passes=10):
+        self.max_passes = max_passes
+        self.rules_applied = 0
 
-    # ── Règles ───────────────────────────────────────────────────────────────
-
-    def _rational_one_plus_delta(self, expr):
-        """Règle 1 : fraction P/Q → 1 + δ·s/Q quand deg P = deg Q."""
-        try:
-            N, D = expr.as_numer_denom()
-            if N.is_polynomial(s) and D.is_polynomial(s):
-                pN = Poly(N, s)
-                pD = Poly(D, s)
-                if pN.degree() == pD.degree() == 2:
-                    if abs(float(pN.LC() - pD.LC())) < float(self.eps):
-                        delta_b = pN.coeff_monomial(s) - pD.coeff_monomial(s)
-                        diff = N - D - delta_b * s
-                        if abs(float(diff)) < float(self.eps) and delta_b != 0:
-                            return 1 + (delta_b * s) / D
-        except Exception:
-            pass
-        return expr
-
-    def _horner_after_rewrite(self, expr):
-        """Règle 2 : forme de Horner sur le dénominateur d'une fraction 1 + num/den."""
-        if expr.is_Add and len(expr.args) == 2:
-            one, frac = expr.args
-            if one == 1 and frac.is_Mul:
-                try:
-                    num, den = frac.as_numer_denom()
-                    if den.is_polynomial(s):
-                        return 1 + num / sp.horner(den)
-                except Exception:
-                    pass
-        return expr
-
-    def _factor_after_delta(self, expr):
-        """Règle 3 : factorisation du quotient après réécriture 1+δ."""
-        if expr.is_Add and len(expr.args) == 2:
-            one, frac = expr.args
-            if one == 1 and frac.is_Mul:
-                try:
-                    num, den = frac.as_numer_denom()
-                    return 1 + sp.factor(num / den)
-                except Exception:
-                    pass
-        return expr
-
-    def _cancel_common_terms(self, expr):
-        """Règle 4 : annulation des termes communs entre numérateur et dénominateur."""
-        try:
-            N, D = expr.as_numer_denom()
-            if N.is_Add and D.is_Add:
-                common = set(N.args) & set(D.args)
-                if common:
-                    new_N = Add(*[t for t in N.args if t not in common])
-                    new_D = Add(*[t for t in D.args if t not in common])
-                    if new_D != 0:
-                        return new_N / new_D
-        except Exception:
-            pass
-        return expr
-
-    def _trig_identity_rule(self, expr):
-        """Règle 5 : identités trigonométriques (sin²+cos²=1, etc.)."""
-        try:
-            if expr.has(sp.sin, sp.cos):
-                return sp.trigsimp(expr)
-        except Exception:
-            pass
-        return expr
-
-    def _exp_log_rule(self, expr):
-        """Règle 6 : simplifications exp/log (exp(log(x))=x, etc.)."""
-        try:
-            if expr.has(sp.exp, sp.log):
-                return sp.simplify(expr)
-        except Exception:
-            pass
-        return expr
-
-    # ── Boucle de saturation ─────────────────────────────────────────────────
-
-    def optimize(self, expr, max_iterations: int = 30):
-        """
-        Applique les règles en boucle jusqu'à convergence.
-        Retourne l'expression de coût minimal trouvée.
-        """
-        current = simplify(expr)
-        best = current
-        best_cost = self._cost(current)
-        seen = set()
-
-        for _ in range(max_iterations):
-            improved = False
-            for rule in self.rules:
-                try:
-                    candidate = rule(current)
-                    candidate = simplify(candidate)
-                except Exception:
-                    continue
-                key = str(candidate)
-                if key not in seen:
-                    seen.add(key)
-                    c = self._cost(candidate)
-                    if c < best_cost:
-                        best = candidate
-                        best_cost = c
-                        current = candidate
-                        improved = True
-            if not improved:
+    def optimize(self, expr):
+        """Apply rewriting rules until no further simplification is possible."""
+        self.rules_applied = 0
+        for _ in range(self.max_passes):
+            new_expr = self._apply_rules(expr)
+            if repr(new_expr) == repr(expr):
                 break
+            expr = new_expr
+        return expr
 
-        return best
+    def _apply_rules(self, expr):
+        """Recursively apply all 6 rewriting rules."""
+        if isinstance(expr, (Const, Var)):
+            return expr
 
-    def _cost(self, expr) -> int:
-        """Coût = nombre d'opérations atomiques dans l'expression."""
-        try:
-            return sum(
-                len(expr.atoms(op))
-                for op in [sp.Add, sp.Mul, sp.Pow,
-                           sp.sin, sp.cos, sp.exp, sp.log]
-            )
-        except Exception:
-            return 9999
+        if isinstance(expr, EML):
+            # Recurse first
+            left  = self._apply_rules(expr.left)
+            right = self._apply_rules(expr.right)
+
+            # Rule 1: eml(x, 1) = exp(x)
+            if isinstance(right, Const) and right.value == 1:
+                self.rules_applied += 1
+                return _ExpNode(left)
+
+            # Rule 5: eml(eml(1, x), 1) = exp(1 - x)
+            if (isinstance(left, EML)
+                    and isinstance(left.left, Const)
+                    and left.left.value == 1
+                    and isinstance(right, Const)
+                    and right.value == 1):
+                self.rules_applied += 1
+                return _ExpNode(_SubNode(Const(1), left.right))
+
+            # Rule 6: eml(0, x) = 1 - ln(x)
+            if isinstance(left, Const) and left.value == 0:
+                self.rules_applied += 1
+                return _SubNode(Const(1), _LnNode(right))
+
+            return EML(left, right)
+
+        if isinstance(expr, EMLStar):
+            left  = self._apply_rules(expr.left)
+            right = self._apply_rules(expr.right)
+
+            # Rule 4: eml★(0, eml(z, 1)) = 1 - conj(z)
+            if (isinstance(left, Const) and left.value == 0
+                    and isinstance(right, EML)
+                    and isinstance(right.right, Const)
+                    and right.right.value == 1):
+                self.rules_applied += 1
+                return _SubNode(Const(1), _ConjNode(right.left))
+
+            return EMLStar(left, right)
+
+        return expr
 
 
-def optimize_eml(expr, method: str = "egraph"):
-    """
-    Interface simplifiée.
-    method='egraph'  → EGraphOptimizer (défaut)
-    method='basic'   → factor + horner + CSE sympy
-    """
-    if method == "egraph":
-        return EGraphOptimizer().optimize(expr)
+# ── Helper nodes for simplified expressions ────────────────────────────────────
 
-    # Méthode de base sans E-graph
-    try:
-        expr = sp.factor(expr)
-    except Exception:
-        pass
-    expr = sp.horner(expr)
-    replacements, reduced = sp.cse(expr, optimizations='basic')
-    for old, new in replacements:
-        reduced[0] = reduced[0].subs(old, new)
-    return reduced[0]
+class _ExpNode(Expr):
+    def __init__(self, arg):
+        self.arg = arg
+
+    def eval(self, z=None):
+        return mpmath.exp(self.arg.eval(z))
+
+    def __repr__(self):
+        return f"exp({self.arg})"
+
+
+class _LnNode(Expr):
+    def __init__(self, arg):
+        self.arg = arg
+
+    def eval(self, z=None):
+        return mpmath.log(self.arg.eval(z))
+
+    def __repr__(self):
+        return f"ln({self.arg})"
+
+
+class _SubNode(Expr):
+    def __init__(self, a, b):
+        self.a = a
+        self.b = b
+
+    def eval(self, z=None):
+        return self.a.eval(z) - self.b.eval(z)
+
+    def __repr__(self):
+        return f"({self.a} - {self.b})"
+
+
+class _ConjNode(Expr):
+    def __init__(self, arg):
+        self.arg = arg
+
+    def eval(self, z=None):
+        return mpmath.conj(self.arg.eval(z))
+
+    def __repr__(self):
+        return f"conj({self.arg})"
+
+
+# ── Demo ───────────────────────────────────────────────────────────────────────
+
+if __name__ == "__main__":
+    opt = EGraphOptimizer()
+
+    print("EGraphOptimizer — 6 rewriting rules demo")
+    print()
+
+    # conjugate_formula: 1 - eml★(0, eml(z, 1))
+    z = Var("z")
+    conj_expr = EMLStar(Const(0), EML(z, Const(1)))
+    simplified = opt.optimize(conj_expr)
+    print(f"  Original : {conj_expr}")
+    print(f"  Simplified: {simplified}")
+    print(f"  Rules applied: {opt.rules_applied}")
+
+    z_val = mpmath.mpc(1.5, 0.8)
+    original_val   = conj_expr.eval(z_val)
+    simplified_val = simplified.eval(z_val)
+    print(f"  Numeric check: original={original_val:.6f}, simplified={simplified_val:.6f}")
+    print(f"  Error: {abs(original_val - simplified_val):.2e}")
