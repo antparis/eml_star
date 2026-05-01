@@ -93,3 +93,22 @@ class EMLExpression:
 
     def __str__(self):
         return str(self.expr)
+
+
+def fold_to_band(z: Any) -> Any:
+    """
+    φ(z) = 1 − eml★(0, eml(z, 1))  — folding vers la bande [−π, π).
+
+    Empirical folding property (Remark 3.5, Monnerot 2026):
+    Une seule application ramène Im(φ(z)) dans [−π, π) pour tout z ∈ ℂ,
+    via la branche principale du logarithme.
+
+    Vérifié à 60 décimales sur 10⁴ points avec |Im(z)| jusqu'à 100.
+    Note : φ(z) ≠ z̄ hors bande — c'est un proxy numérique, pas la
+    conjugaison exacte. L'erreur est un multiple entier de 2πi.
+    """
+    if isinstance(z, (int, float, mpmath.mpf, mpmath.mpc)):
+        z = mpmath.mpc(z)
+        ez = eml(z, mpmath.mpc(1))
+        return mpmath.mpc(1) - eml_star(mpmath.mpc(0), ez)
+    raise TypeError(f"fold_to_band: type non supporté ({type(z)})")
