@@ -1,74 +1,109 @@
-# rust_autogen_parallel_search
+# eml★ — Minimal Anti-Holomorphic Extension of the EML Sheffer Operator
 
-Parallel exhaustive Sheffer auto-generation checker using Rayon.
+**Author:** Anthony Monnerot  
+**Date:** May 2, 2026  
+**Extension of:** Odrzywołek (arXiv:2603.21852v2)
 
-## Requirements
+---
 
-- Rust toolchain with `cargo`
-- Internet access on first build to fetch crates (`rayon` and dependencies)
-- Windows 11, Linux, or macOS
+## Background
 
-## Notes before running
+Odrzywołek (2026) showed that a single binary operator  
+`eml(x, y) = exp(x) − ln(y)` together with the constant 1  
+generates all classical elementary functions (continuous Sheffer basis).
 
-- There is no `--help` output implemented in this binary.
-- This tool can become expensive for larger `--gen-k`, `--verify-k`, and broad
-  generation languages.
-- The startup line reports both requested and effective Rayon thread count.
+**Structural limitation identified** (Theorem 2.1 / Corollary 2.2):  
+eml is holomorphic by construction → z̄, Re(z), Im(z), |z|² are **unreachable**
+by any finite eml tree. This result is unconditional.
 
-## Tested smoke test (fast)
+---
 
-Run from this directory:
+## Contribution: eml★
 
-```sh
-cargo run --release -- \
-  --profiles 0 \
-  --gen-k 3 \
-  --verify-k 4 \
-  --max-keep-per-level 10000 \
-  --families S3_Exp_LogBinary \
-  --gen-unary Exp \
-  --gen-binary Log \
-  --rayon-threads 4
+```
+eml★(x, y) = exp(x) − ln(ȳ)
 ```
 
-This command is intentionally constrained and completes quickly while still
-exercising parallel profile-0 unary/binary search.
+A single conjugate on the second argument is sufficient to reach:
 
-Expected key output lines:
+| Result | Depth | Status |
+|---|---|---|
+| **Cor. 2.2**: Re, Im, conj ∉ {eml, 1} | — | **UNCONDITIONAL** |
+| **Th. 3.1**: z̄ = 1 − eml★(0, eml(z,1)) | relative 2 | Conditional: Im(z) ∈ [−π, π) |
+| **Th. 3.2**: exact domain [−π, π) | — | Conditional; boundary −π proved via SymPy |
+| **Th. 4.3**: {eml, eml★, 1} dense in C(K, ℂ) | — | Stone–Weierstrass, conditional on branch-safety lemma; numerically confirmed at 60 dps (trees K=13 for +, K=20 for ×, Zenodo DOI:10.5281/zenodo.19183008) |
 
-- `Run config: gen_k=3 ... verify_k=4 ... rayon_threads_request=4 ...`
-- `Enabled families: ["S3_Exp_LogBinary"]`
-- `Profile 0 hits: ...`
-- `Done. hits=..., elapsed=...`
+---
 
-## Main flags supported by this binary
+## Branch-Safety Verification (May 2026)
 
-All flags from `rust_autogen_search` plus:
+Real EML trees for + (K=13) and × (K=20) extracted from Odrzywołek's official
+archive (`eml_compiler_v4.py`, Zenodo DOI:10.5281/zenodo.19183008) and tested
+with mpmath at 60 decimal places:
 
-- `--rayon-threads <usize>`
-  `0` (default) means automatic thread count.
+- ℝ⁺: ✅ branch-safe  
+- ℂ (small Im): ✅ branch-safe  
+- 1000 random points in Im ∈ (−1, 1): ✅ zero violations  
 
-Common flags:
+Reproducible script: `branch_safety_final.py`
 
-- `--gen-k <usize>`
-- `--gen-k-const <usize>`
-- `--verify-k <usize>`
-- `--max-keep-per-level <usize>`
-- `--profile <0|A|B|C>` (repeatable)
-- `--profiles <csv>` (e.g. `0,A`)
-- `--families <csv>`
-- `--disable-families <csv>`
-- `--gen-const <csv>`
-- `--gen-unary <csv>`
-- `--gen-binary <csv>`
-- `--gen-ternary <csv>`
-- `--allow-partial-deps` or `--require-full-deps`
-- `--no-quotient-var-permutations` or `--quotient-var-permutations`
+---
 
-Family names currently available:
+## Choice by Use Case
 
-- `S1_ExpLog_Subtract`
-- `S2_E_Power_Log`
-- `S3_Exp_LogBinary`
-- `S4_Cosh_ArcCosh_Divide`
-- `Wolfram_Mathematica`
+- **Uniform symbolic regression (Sheffer)** → **{eml, eml★, 1}**  
+  Homogeneous binary grammar `S → 1 | eml(S,S) | eml★(S,S)`.  
+  Compatible with Odrzywołek's Rust/Mathematica engine without modification.
+
+- **Physical observables without strip restriction** → **{eml, Re, 1}**  
+  z̄ = 2 Re(z) − z, |z|² exact everywhere on ℂ.  
+  Note: Re is a unary operator — breaks the uniform binary grammar.
+
+Both bases are valid. The choice depends on the intended application.
+
+---
+
+## Honest Caveats
+
+- Im(z) ∈ [−π, π) is a condition on the **value** of z, not on its argument.
+  For normalized plane waves (|ψ| = 1), it is automatically satisfied.
+- Th. 4.3 is proved via Stone–Weierstrass conditionally on a branch-safety
+  lemma. The lemma is verified numerically at 60 decimal places on tested
+  domains (grids and 1000 random points). A formal proof via interval
+  analysis on Im(·) of every intermediate node remains an open problem.
+- The system is limited to elementary functions.
+
+---
+
+## Project Files
+
+| File | Role |
+|---|---|
+| `eml_star_final.pdf` | Full paper (4 pages + Appendix A) |
+| `branch_safety_final.py` | Branch-safety test on real Zenodo trees K=13, K=20 |
+| `emlstar_engine.py` | Complete eml★ verification engine |
+| `verify_theorem4.py` | Numerical verification of Theorem 4.3 |
+| `test_folding.py` | Folding property test (10000 out-of-band points) |
+| `eml_toolkit/core.py` | eml, eml★, conjugate_formula operators |
+| `eml_toolkit/optimizer.py` | EGraphOptimizer (6 rewriting rules) |
+| `eml_toolkit/eml_quantum.py` | Phase, geometric phase, self-testing |
+| `eml_toolkit/examples_constants.py` | π/3, π/4, √2 via eml★ |
+| `eml_toolkit/test_suite.py` | Complete test suite (16/16 passed) |
+| `docs/PROJECT_SUMMARY.md` | Full project summary and theorem statuses |
+| `reference/2603_21852v2_Odrzywolek.pdf` | Source paper (Odrzywołek 2026) |
+
+---
+
+## License
+
+MIT
+
+---
+
+## Citation
+
+```
+Monnerot, A. (2026). eml★: Minimal Anti-Holomorphic Extension of the EML
+Sheffer Operator. Extension of Odrzywołek (arXiv:2603.21852v2).
+GitHub: https://github.com/antparis/eml_star
+```
