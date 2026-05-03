@@ -31,15 +31,18 @@ A single conjugate on the second argument is sufficient to reach:
 | **Cor. 2.2**: Re, Im, conj ∉ {eml, 1} | — | **UNCONDITIONAL** |
 | **Th. 3.1**: z̄ = 1 − eml★(0, eml(z,1)) | relative 2 | Conditional: Im(z) ∈ [−π, π) |
 | **Th. 3.2**: exact domain [−π, π) | — | Conditional; boundary −π proved via SymPy |
-| **Th. 4.3**: {eml, eml★, 1} dense in C(K, ℂ) | — | Stone–Weierstrass, conditional on branch-safety lemma; numerically confirmed at 60 dps (trees K=13 for +, K=20 for ×, Zenodo DOI:10.5281/zenodo.19183008) |
+| **Th. 4.3**: {eml, eml★, 1} dense in C(K, ℂ) | — | Stone–Weierstrass, conditional on branch-safety lemma; numerically confirmed at 60 dps (trees RPN-length 19 for +, RPN-length 17 for ×, Zenodo DOI:10.5281/zenodo.19183008) |
 
 ---
 
 ## Branch-Safety Verification (May 2026)
 
-Real EML trees for + (K=13) and × (K=20) extracted from Odrzywołek's official
+Real EML trees for + (RPN-length 19) and × (RPN-length 17) extracted from Odrzywołek's official
 archive (`eml_compiler_v4.py`, Zenodo DOI:10.5281/zenodo.19183008) and tested
 with mpmath at 60 decimal places:
+
+> **Note on notation:** K denotes RPN (Reverse Polish Notation) program length,
+> as defined in Odrzywołek (2026) Table 4. Tree depth is approximately K/2.
 
 - ℝ⁺: ✅ branch-safe  
 - ℂ (small Im): ✅ branch-safe  
@@ -80,7 +83,7 @@ Both bases are valid. The choice depends on the intended application.
 | File | Role |
 |---|---|
 | `eml_star_final.pdf` | Full paper (4 pages + Appendix A) |
-| `branch_safety_final.py` | Branch-safety test on real Zenodo trees K=13, K=20 |
+| `branch_safety_final.py` | Branch-safety test on real Zenodo trees (RPN-length 19 for +, 17 for ×) |
 | `emlstar_engine.py` | Complete eml★ verification engine |
 | `verify_theorem4.py` | Numerical verification of Theorem 4.3 |
 | `test_folding.py` | Folding property test (10000 out-of-band points) |

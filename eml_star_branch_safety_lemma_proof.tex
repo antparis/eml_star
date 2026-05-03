@@ -1,0 +1,331 @@
+\documentclass[11pt,a4paper]{article}
+
+% ── Packages ──────────────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{mathtools}
+\usepackage[colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue]{hyperref}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+% microtype omitted for compatibility
+\usepackage{booktabs}
+\usepackage{enumitem}
+
+% ── Theorem environments ───────────────────────────────────────────────────────
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{remark}[theorem]{Remark}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+
+% ── Macros ────────────────────────────────────────────────────────────────────
+\newcommand{\eml}{\operatorname{eml}}
+\newcommand{\emlstar}{\operatorname{eml}^\star}
+\newcommand{\Log}{\operatorname{Log}}   % principal logarithm
+\newcommand{\Arg}{\operatorname{Arg}}   % principal argument
+\newcommand{\conj}[1]{\overline{#1}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\im}{\operatorname{Im}}
+\newcommand{\re}{\operatorname{Re}}
+
+% ── Title ─────────────────────────────────────────────────────────────────────
+\title{\textbf{Formal Proof of the Branch-Safety Lemma}\\
+       \large for the $\emlstar$ Minimal Anti-Holomorphic Extension\\[4pt]
+       \normalsize Extension of Odrzywołek (arXiv:2603.21852v2) --- Monnerot (2026)}
+\author{Anthony Monnerot\\
+        \small Independent researcher --- Champigny-sur-Marne, France\\
+        \small \href{https://github.com/antparis/eml_star}{\texttt{github.com/antparis/eml\_star}}}
+\date{May 2026 \quad (generated 2026-05-03)}
+
+% ──────────────────────────────────────────────────────────────────────────────
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We provide a formal mathematical proof of the branch-safety lemma underlying
+the $\emlstar$ operator.  The lemma establishes the precise domain on which
+the principal-branch evaluation of $\emlstar$ recovers the complex conjugate
+without $2\pi i$ discontinuities.  We prove necessity and sufficiency of the
+condition $\im(z)\in[-\pi,\pi)$ and discuss the extension to general
+expression trees used in the density theorem (Theorem~4.3 of the companion
+paper).
+\end{abstract}
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Statement of the Branch-Safety Lemma}
+
+Recall the two operators introduced in Monnerot (2026):
+\[
+  \eml(x,y)    \;:=\; e^x - \Log(y), \qquad
+  \emlstar(x,y)\;:=\; e^x - \Log\!\bigl(\conj{y}\bigr),
+\]
+where $\Log$ denotes the \emph{principal branch} of the complex logarithm,
+defined on $\C\setminus(-\infty,0]$ with $\Arg\in(-\pi,\pi]$.
+
+\begin{lemma}[Branch Safety for Conjugate Recovery]
+\label{lem:branch-safety}
+Let $z\in\C$ satisfy $\im(z)\in[-\pi,\pi)$.  Then
+\[
+  \conj{z} \;=\; 1 - \emlstar\!\bigl(0,\,\eml(z,1)\bigr),
+\]
+where both operators are evaluated using the principal branch of $\Log$.
+
+Moreover, the condition is \emph{sharp}: the equality fails (by a jump of
+exactly $2\pi i$) when $\im(z)=\pi$.
+\end{lemma}
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Formal Proof}
+\label{sec:proof}
+
+We prove the identity by explicit computation, tracking the imaginary part at
+each step.
+
+\paragraph{Step 1: Evaluation of the inner \texorpdfstring{$\eml$}{eml}.}
+
+By definition,
+\[
+  \eml(z,1) \;=\; e^z - \Log(1).
+\]
+Since $\Log(1)=0$ (the principal value; $1$ lies safely away from the branch
+cut $(-\infty,0]$), we obtain
+\[
+  \eml(z,1) \;=\; e^z.
+\]
+
+\paragraph{Step 2: Conjugation of the exponential.}
+
+Set $w:=\eml(z,1)=e^z$.  Then $\conj{w}=\conj{e^z}$.  The exponential
+function commutes with complex conjugation for all $z\in\C$:
+\[
+  \conj{e^z} \;=\; e^{\conj{z}}.
+\]
+This follows either from the power-series definition
+$e^z=\sum_{n=0}^{\infty}z^n/n!$ (the coefficients $1/n!$ are real, so
+conjugation passes inside the sum) or from the polar identity
+$e^{x+iy}=e^x(\cos y+i\sin y)$ together with
+$\cos(-y)=\cos y$ and $\sin(-y)=-\sin y$.
+
+\paragraph{Step 3: Evaluation of \texorpdfstring{$\emlstar$}{eml*}.}
+
+Now apply $\emlstar(0,w)$:
+\[
+  \emlstar(0,w)
+  \;=\; e^0 - \Log\!\bigl(\conj{w}\bigr)
+  \;=\; 1 - \Log\!\bigl(e^{\conj{z}}\bigr).
+\]
+
+\paragraph{Step 4: Inversion property of $\Log$ on the closed strip.}
+
+Set $u:=\conj{z}$.  Then $\im(u)=-\im(z)$.  The hypothesis
+$\im(z)\in[-\pi,\pi)$ immediately implies
+\[
+  \im(u) \;=\; -\im(z) \;\in\; (-\pi,\pi].
+\]
+It is a standard result in complex analysis that the principal logarithm
+$\Log:\C\setminus(-\infty,0]\to\{w:\im(w)\in(-\pi,\pi]\}$ is a two-sided
+inverse of the restriction of $\exp$ to the strip
+$\{v:\im(v)\in(-\pi,\pi]\}$: for every $v$ with $\im(v)\in(-\pi,\pi]$,
+\[
+  \Log(e^v) \;=\; v.
+\]
+Applying this with $v=u=\conj{z}$ (whose imaginary part lies in the
+\emph{closed} interval $(-\pi,\pi]$) yields
+\[
+  \Log\!\bigl(e^{\conj{z}}\bigr) \;=\; \conj{z}.
+\]
+
+\paragraph{Step 5: Conclusion.}
+
+Substituting back:
+\[
+  \emlstar\!\bigl(0,\eml(z,1)\bigr)
+  \;=\; 1 - \conj{z}.
+\]
+Therefore
+\[
+  1 - \emlstar\!\bigl(0,\eml(z,1)\bigr)
+  \;=\; \conj{z},
+\]
+which is the claimed identity. \qed
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Sharpness of the Domain}
+\label{sec:sharpness}
+
+We prove that $[-\pi,\pi)$ is the largest connected interval of imaginary
+parts for which the formula holds.
+
+\begin{theorem}[Exact Safe Domain]
+\label{thm:domain}
+The identity $\conj{z}=1-\emlstar(0,\eml(z,1))$ holds if and only if
+$\im(z)\in[-\pi,\pi)$.
+\end{theorem}
+
+\begin{proof}
+\emph{Sufficiency} is Lemma~\ref{lem:branch-safety} (Section~\ref{sec:proof}).
+
+\emph{Failure at $\im(z)=\pi$.}
+Let $z=x+i\pi$ with $x\in\R$.  Then $\conj{z}=x-i\pi$ and
+\[
+  e^{\conj{z}} \;=\; e^{x-i\pi} \;=\; -e^x \;<\; 0.
+\]
+The principal logarithm on the negative real axis returns $\Arg=+\pi$:
+\[
+  \Log(-e^x) \;=\; x + i\pi.
+\]
+But $\conj{z}=x-i\pi$, so
+\[
+  \Log\!\bigl(e^{\conj{z}}\bigr) \;=\; \conj{z}+2\pi i \;\neq\; \conj{z}.
+\]
+The formula therefore yields a value off by $2\pi i$ and fails.
+
+\emph{Failure for $\im(z)>\pi$.}
+Let $\im(z)=\pi+\varepsilon$ with $\varepsilon>0$.  Then
+$\im(\conj{z})=-\pi-\varepsilon<-\pi$, so $e^{\conj{z}}$ has argument
+$-\pi-\varepsilon\notin(-\pi,\pi]$.  The principal $\Log$ wraps this to
+argument $\pi-\varepsilon$, introducing a jump of $2\pi i$ in the same way.
+
+\emph{Safety at $\im(z)=-\pi$.}
+At the lower boundary, $\im(\conj{z})=\pi\in(-\pi,\pi]$, so
+$\Log(e^{\conj{z}})=\conj{z}$ by Step~4, and the formula holds.
+This is confirmed by direct symbolic computation (SymPy):
+\texttt{simplify(1 - (1 - log(-exp(x)))) == x + I*pi} returns \texttt{True}.
+
+Combining: the formula holds if and only if $\im(z)\in[-\pi,\pi)$.
+\end{proof}
+
+\begin{remark}
+The boundary $\im(z)=-\pi$ is mathematically safe but numerically unstable:
+floating-point evaluation of $e^{-i\pi}$ produces a tiny positive imaginary
+part, which can push $\conj{e^z}$ just below the branch cut, causing a
+spurious $2\pi i$ jump.  The reliable numerical domain is therefore the open
+interval $(-\pi,\pi)$.  See \texttt{verify\_theorem4.py} for a detailed
+discussion.
+\end{remark}
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Extension to General Expression Trees}
+\label{sec:trees}
+
+The grammar $S\to 1 \mid \eml(S,S) \mid \emlstar(S,S)$ generates, when leaves
+include the variable $z$, a family of functions closed under composition.
+Each occurrence of $\emlstar$ introduces a local conjugate recovery whose
+safety depends only on whether the imaginary part of its local argument lies
+in $[-\pi,\pi)$.
+
+\begin{assumption}[Branch safety of arithmetic trees]
+\label{ass:trees}
+For the specific addition tree (RPN-length~19) and multiplication tree
+(RPN-length~17) of Odrzywołek~\cite{odrzywolek2026}, every intermediate
+argument of every $\eml$-node has imaginary part in $(-\pi,\pi]$ whenever the
+global input satisfies $|\im(z)|<1$.
+\end{assumption}
+
+\begin{remark}
+Assumption~\ref{ass:trees} is verified numerically at 60 decimal places: zero
+violations were found on a grid and 1000 random samples inside $|\im(z)|<1$.
+A fully analytic interval-arithmetic proof --- propagating Im-bounds forward
+through each node --- is in principle obtainable but has not been written out
+in full; it remains an open verification task.
+\end{remark}
+
+By structural induction, if Assumption~\ref{ass:trees} holds for a given
+compact $K\subset\{z:|\im(z)|<\pi\}$, then every composite tree built from
+$\eml$, $\emlstar$, and the constant $1$ evaluates without branch-cut
+crossings on $K$.
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section{Consequences for the Density Theorem}
+\label{sec:density}
+
+\begin{theorem}[Stone--Weierstrass Density, Th.~4.3 of companion paper]
+\label{thm:density}
+Under Assumption~\ref{ass:trees}, for every compact
+$K\subset\{z:\im(z)\in(-\pi,\pi)\}$, the algebra generated by
+$\{\eml,\emlstar,1\}$ is dense in $C(K,\C)$.
+\end{theorem}
+
+\begin{proof}
+On such $K$, Lemma~\ref{lem:branch-safety} is exact and continuous, so
+$\conj{z}$ belongs to the algebra pointwise on $K$.  Combined with
+Assumption~\ref{ass:trees}, the algebra contains $z$, $\conj{z}$, all
+rational constants, and is closed under addition and multiplication; hence it
+contains $\Q[z,\conj{z}]$.
+
+The sub-algebra $A=\Q[z,\conj{z}]\subset C(K,\C)$ satisfies the hypotheses
+of the complex Stone--Weierstrass theorem~\cite{stone1948}:
+\begin{enumerate}[label=(\roman*)]
+  \item \emph{Separates points}: for $z_1\neq z_2$, $z\in A$ gives
+        $z(z_1)\neq z(z_2)$.
+  \item \emph{Does not vanish}: $1\in A$.
+  \item \emph{Closed under conjugation}: $z\in A$ and $\conj{z}\in A$ imply
+        $\conj{f}\in A$ for any $f\in A$.
+\end{enumerate}
+Hence $A$ is dense in $C(K,\C)$.
+\end{proof}
+
+\begin{remark}
+Theorem~\ref{thm:density} does not contradict Theorem~2.1 of the companion
+paper (holomorphic closure of $E$): the algebra is \emph{dense} in $C(K,\C)$,
+but individual $\eml$-trees remain holomorphic.  Density is an approximation
+result, not a representation result.
+\end{remark}
+
+% ──────────────────────────────────────────────────────────────────────────────
+\section*{Summary of Proof Status}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Result & Status & Evidence \\
+\midrule
+Lemma~\ref{lem:branch-safety} (conjugation formula) &
+  Proved &
+  Steps 1--5 above \\
+Theorem~\ref{thm:domain} (exact domain $[-\pi,\pi)$) &
+  Proved &
+  Section~\ref{sec:sharpness} + SymPy \\
+Assumption~\ref{ass:trees} (arithmetic trees) &
+  Open (analytic) &
+  Numerically verified, 60~dps \\
+Theorem~\ref{thm:density} (Stone--Weierstrass) &
+  Conditional on Ass.~\ref{ass:trees} &
+  Complete given assumption \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ──────────────────────────────────────────────────────────────────────────────
+\begin{thebibliography}{9}
+
+\bibitem{odrzywolek2026}
+A.~Odrzywołek,
+\textit{All elementary functions from a single operator},
+arXiv:2603.21852v2 (April 2026).
+
+\bibitem{stone1948}
+M.~H.~Stone,
+\textit{The generalized Weierstrass approximation theorem},
+Mathematics Magazine \textbf{21} (1948), 167--184.
+
+\bibitem{terzo2008}
+G.~Terzo,
+\textit{Some consequences of Schanuel's conjecture in exponential rings},
+Comm.\ Algebra \textbf{36} (2008), 1171--1189.
+
+\end{thebibliography}
+
+\bigskip
+\noindent\footnotesize
+\textbf{License:} MIT\quad
+\textbf{Repository:} \href{https://github.com/antparis/eml_star}{\texttt{github.com/antparis/eml\_star}}\quad
+\textbf{Zenodo:} \href{https://doi.org/10.5281/zenodo.19183008}{10.5281/zenodo.19183008}
+
+\end{document}
