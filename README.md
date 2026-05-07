@@ -86,12 +86,11 @@ Both bases are valid. The choice depends on the intended application.
 | `branch_safety_final.py` | Branch-safety test on real Zenodo trees (RPN-length 19 for +, 17 for ×) |
 | `emlstar_engine.py` | Complete eml★ verification engine |
 | `verify_theorem4.py` | Numerical verification of Theorem 4.3 |
-| `test_folding.py` | Folding property test (10000 out-of-band points) |
 | `eml_toolkit/core.py` | eml, eml★, conjugate_formula operators |
 | `eml_toolkit/optimizer.py` | EGraphOptimizer (6 rewriting rules) |
 | `eml_toolkit/eml_quantum.py` | Phase, geometric phase, self-testing |
 | `eml_toolkit/examples_constants.py` | π/3, π/4, √2 via eml★ |
-| `eml_toolkit/test_suite.py` | Complete test suite (16/16 passed) |
+| `eml_toolkit/test_suite.py` | Complete test suite (20/20 passed) |
 | `docs/PROJECT_SUMMARY.md` | Full project summary and theorem statuses |
 | `reference/2603_21852v2_Odrzywolek.pdf` | Source paper (Odrzywołek 2026) |
 
