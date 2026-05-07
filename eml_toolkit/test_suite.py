@@ -164,7 +164,8 @@ def test_out_of_band():
         inside = abs(float(mpmath.im(z))) < pi
         expected_fail = not inside
         if expected_fail and n >= 1:
-            _passed.__class__  # no-op
+            global _passed
+            _passed += 1
             print(f"  PASS  z={z}  Im={float(mpmath.im(z)):.2f}  "
                   f"err={err:.4f} = {n}x2pi  [expected out-of-band jump]")
         elif not expected_fail and err < 1e-40:

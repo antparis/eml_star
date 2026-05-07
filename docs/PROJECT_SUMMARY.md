@@ -80,7 +80,6 @@ If no endorser for math.CV, submit cs.SC primary + math.CV secondary.
 | `branch_safety_final.py` | K=13(+) K=20(×) branch-safety at 60 dps | ALL PASS |
 | `verify_theorem4.py` | Theorem 4.3 numerical verification | ALL PASS |
 | `emlstar_engine.py` | Complete eml★ verification engine | ALL PASS |
-| `test_folding.py` | Folding property test (10000 points) | ALL PASS |
 | `eml_toolkit/core.py` | eml, eml★, all formulas, alt basis {eml, Re, 1} | ✓ |
 | `eml_toolkit/optimizer.py` | EGraph optimizer — 6 rewriting rules | ✓ |
 | `eml_toolkit/test_suite.py` | Complete test suite | 16/16 PASS |
