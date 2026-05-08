@@ -109,4 +109,5 @@ MIT
 Monnerot, A. (2026). eml★: Minimal Anti-Holomorphic Extension of the EML
 Sheffer Operator. Extension of Odrzywołek (arXiv:2603.21852v2).
 GitHub: https://github.com/antparis/eml_star
+Zenodo: https://doi.org/10.5281/zenodo.20091023
 ```
