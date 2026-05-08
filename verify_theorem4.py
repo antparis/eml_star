@@ -35,6 +35,7 @@ def symbolic_minus_pi():
     x = sp.Symbol('x', real=True)
     # ln(-exp(x)) = x + iπ under principal branch (since -exp(x) < 0)
     result = sp.simplify(1 - (1 - sp.log(-sp.exp(x))))
+    # z = x - i*pi, so eml(z,1) = exp(x-i*pi) = -exp(x) (real, negative)
     expected = x + sp.I * sp.pi  # = conj(x - iπ)
     return sp.simplify(result - expected) == 0
 
