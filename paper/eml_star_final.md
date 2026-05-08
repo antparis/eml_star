@@ -171,7 +171,7 @@ The author used Claude (Anthropic) and Grok (xAI) as AI coding and verification 
 ---
 
 *Ancillary files: `branch_safety_final.py` · `verify_theorem4.py` · `eml_toolkit/direct_verification.py` · `eml_star_branch_safety_lemma_proof.pdf`*  
-*License: MIT · Zenodo: 10.5281/zenodo.19183008 · GitHub: github.com/antparis/eml_star*
+*License: MIT · GitHub: github.com/antparis/eml_star*
 
 
 ## 5b. Causal Confirmation (GP Experiment)
