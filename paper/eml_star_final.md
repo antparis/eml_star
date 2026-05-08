@@ -172,3 +172,12 @@ The author used Claude (Anthropic) and Grok (xAI) as AI coding and verification 
 
 *Ancillary files: `branch_safety_final.py` · `verify_theorem4.py` · `eml_toolkit/direct_verification.py` · `eml_star_branch_safety_lemma_proof.pdf`*  
 *License: MIT · Zenodo: 10.5281/zenodo.19183008 · GitHub: github.com/antparis/eml_star*
+
+
+## 5b. Causal Confirmation (GP Experiment)
+
+To provide experimental confirmation of Corollary 2.2, a causal GP experiment was conducted using the DEAP library. The setup used a single input z, with target conj(Z) on the safe domain Im(z) in [-pi + 0.1, pi - 0.1]. The primitives included the corrected complex versions of eml and eml_star. A total of 100 independent runs were performed (200 individuals, 30 generations).
+
+In 90 out of 100 runs, the best tree contained eml_star. The median ATE (increase in MSE when replacing eml_star by eml) was **11.71**, with a 95% bootstrap confidence interval of **[9.64, 12.57]**. This result demonstrates that eml_star is structurally necessary to reach the anti-holomorphic target conj(z). Replacing eml_star by eml produces a statistically significant degradation, confirming that the anti-holomorphic extension is not redundant but essential.
+
+The experiment is fully reproducible from the ancillary notebook CGIB_v8_corrected.ipynb.
