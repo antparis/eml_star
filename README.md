@@ -90,7 +90,7 @@ Both bases are valid. The choice depends on the intended application.
 | `eml_toolkit/optimizer.py` | EGraphOptimizer (6 rewriting rules) |
 | `eml_toolkit/eml_quantum.py` | Phase, geometric phase, self-testing |
 | `eml_toolkit/examples_constants.py` | π/3, π/4, √2 via eml★ |
-| `eml_toolkit/test_suite.py` | Complete test suite (20/20 passed) |
+| `eml_toolkit/test_suite.py` | Complete test suite |
 | `docs/PROJECT_SUMMARY.md` | Full project summary and theorem statuses |
 | `reference/2603_21852v2_Odrzywolek.pdf` | Source paper (Odrzywołek 2026) |
 
