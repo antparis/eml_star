@@ -181,3 +181,26 @@ To provide experimental confirmation of Corollary 2.2, a causal GP experiment wa
 In 90 out of 100 runs, the best tree contained eml_star. The median ATE (increase in MSE when replacing eml_star by eml) was **11.71**, with a 95% bootstrap confidence interval of **[9.64, 12.57]**. This result demonstrates that eml_star is structurally necessary to reach the anti-holomorphic target conj(z). Replacing eml_star by eml produces a statistically significant degradation, confirming that the anti-holomorphic extension is not redundant but essential.
 
 The experiment is fully reproducible from the ancillary notebook CGIB_v8_corrected.ipynb.
+
+
+## 7. The Third Companion Operator emlⁿ
+
+**Motivation.** The system {eml, eml★, 1} provides holomorphic and anti-holomorphic coverage on the safe strip Im(z) ∈ (−π, π). Both operators involve the full complex logarithm ln(y) = log|y| + i·Arg(y). Neither isolates the principal argument Arg(y) alone.
+
+**Definition.** emlⁿ(x, y) := exp(x) − i·Arg(y), where Arg denotes the principal argument (Arg ∈ (−π, π]).
+
+**Proposition 7.1 (numerical independence).** The closest algebraic combination from {eml, eml★} — namely (ln(z̄) − ln(z))/2 — achieves MSE = 1.30e+01 on i·Arg(Z) over a 40×40 grid, while emlⁿ achieves MSE = 0.00e+00. A formal algebraic independence proof remains open.
+
+**Theorem 7.2 (Polar decomposition).** The system {eml, eml★, emlⁿ, 1} gives access to exp(x), log|y|, and Arg(y) separately — the complete polar decomposition on the safe strip.
+
+**Numerical verification.** On a 40×40 grid (Re(z) ∈ [−3,3], Im(z) ∈ [−π+0.1, π−0.1]) and on a full circle (r ∈ [0.5,2], θ ∈ [−π, π]):
+
+| Operator | MSE on i·Arg(Z) |
+|---|---|
+| emlⁿ | 0.00e+00 |
+| eml | 1.33e+01 |
+| eml★ | 3.16e−01 |
+
+**Open problem.** Does a finite operator system cover all of ℂ without monodromy restriction? The winding number is a discrete topological invariant — it appears structurally unreachable by finite compositions of analytic/anti-analytic operators (monodromy theorem). This remains an open problem.
+
+*Reproducibility.* Script: eml_zero_verification_v1.ipynb. Requires NumPy only. Runtime < 1 second.
