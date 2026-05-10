@@ -253,7 +253,7 @@ The principal-argument extraction required for a complete analog implementation 
 Reproducibility. Script: analog_eml_circuit.py. Requires NumPy only. Runtime < 1 second.
 
 
-## 5. Numerical Simulations
+## 9. Numerical Simulations
 
 Four independent numerical simulations were executed to test eml★ operator trees against native NumPy references in representative physical systems. Each simulation records the mean squared error between the two implementations together with the number of branch violations encountered.
 
