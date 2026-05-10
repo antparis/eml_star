@@ -205,3 +205,28 @@ This operator provides direct, decoupled access to the imaginary part of the log
 **Perspective.** emlⁿ does not automatically prevent branch-cut violations. However, it provides the missing primitive needed to detect and potentially constrain the argument during evaluation. It can therefore serve as a diagnostic tool for future formal proofs of branch safety on deep EML expressions, and as a building block for more advanced monitoring or regularization techniques.
 
 *Reproducibility.* Script: eml_zero_verification_v1.ipynb. Requires NumPy only. Runtime < 1 second.
+
+
+## 7. The Third Companion Operator eml⁰
+
+**Motivation.** The system {eml, eml★, 1} provides holomorphic and anti-holomorphic coverage on the safe strip Im(z) ∈ (−π, π). Both operators involve the full complex logarithm ln(y) = log|y| + i·Arg(y). Neither isolates the principal argument Arg(y) alone.
+
+**Definition.** eml⁰(x, y) := exp(x) − i·Arg(y), where Arg denotes the principal argument (Arg ∈ (−π, π]).
+
+**Theorem 7.1 (Independence).** eml⁰ is not constructible by finite composition from {eml, eml★, 1}.
+
+*Proof sketch.* eml⁰(0, y) = 1 − i·Arg(y). Since Arg(y) = Im(ln(y)), and Im is not in E by Corollary 2.2, eml⁰ cannot be reached by finite eml/eml★ compositions. ∎
+
+**Theorem 7.2 (Polar decomposition).** The system {eml, eml★, eml⁰, 1} gives access to exp(x), log|y|, and Arg(y) separately — the complete polar decomposition on the safe strip.
+
+**Numerical verification.** On a 40×40 grid (Re(z) ∈ [−3,3], Im(z) ∈ [−π+0.1, π−0.1]) and on a full circle (r ∈ [0.5,2], θ ∈ [−π, π]):
+
+| Operator | MSE on i·Arg(Z) |
+|---|---|
+| eml⁰ | 0.00e+00 |
+| eml | 1.33e+01 |
+| eml★ | 3.16e-01 |
+
+**Open problem.** Does a finite operator system cover all of ℂ without monodromy restriction? The winding number is a discrete topological invariant — it appears structurally unreachable by finite compositions of analytic/anti-analytic operators (monodromy theorem). This remains an open problem.
+
+*Reproducibility.* Script: eml_zero_verification_v1.ipynb. Requires NumPy only. Runtime < 1 second.
