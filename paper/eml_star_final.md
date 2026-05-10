@@ -250,7 +250,8 @@ A known limitation is dynamic range overflow in deep trees: exponential accumula
 
 The principal-argument extraction required for a complete analog implementation of eml0 remains an open problem.
 
-Reproducibility. Script: analog_eml_circuit.py. Requires NumPy only. 
+Reproducibility. Script: analog_eml_circuit.py. Requires NumPy only. Runtime < 1 second.
+
 
 ## 5. Numerical Simulations
 
