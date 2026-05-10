@@ -230,3 +230,24 @@ This operator provides direct, decoupled access to the imaginary part of the log
 **Open problem.** Does a finite operator system cover all of ℂ without monodromy restriction? The winding number is a discrete topological invariant — it appears structurally unreachable by finite compositions of analytic/anti-analytic operators (monodromy theorem). This remains an open problem.
 
 *Reproducibility.* Script: eml_zero_verification_v1.ipynb. Requires NumPy only. Runtime < 1 second.
+
+
+## 8. Analog Circuit Implementation of the EML Operator Family
+
+The EML operator admits a direct analog realization. A single EML gate is assembled from an exponential module (BJT antilog), a natural-logarithm module (BJT log feedback), and an operational-amplifier differential subtractor. The gate requires two to three op-amps and one or two transistors.
+
+Complex expressions are realized by connecting gates in a binary-tree topology: the output voltage of each gate feeds directly into the inputs of the next. No clock or time-division multiplexing is employed. With 10 MHz operational amplifiers the propagation delay is n x 50-200 ns per stage, n being the tree depth.
+
+The anti-holomorphic extension eml★ is obtained by routing parallel channels for the real and imaginary parts together with a 180 degree phase inverter on the imaginary channel to realize conjugation. Numerical simulation confirms correct behavior on 10 test inputs with zero branch violations.
+
+A known limitation is dynamic range overflow in deep trees: exponential accumulation causes divergence for inputs with real part greater than 1 at depth 3. Inter-stage clipping or normalization is required in practice.
+
+| Operator | Components needed | Complexity | Domain |
+|---|---|---|---|
+| eml | 2-3 op-amps, 1-2 transistors | Low | Real, positive |
+| eml★ | Parallel Re/Im channels + 180 degree inverter | Medium | Complex, Im(z) in (-pi, pi) |
+| eml0 | Additional argument-extraction circuitry | High | Complex (open) |
+
+The principal-argument extraction required for a complete analog implementation of eml0 remains an open problem.
+
+Reproducibility. Script: analog_eml_circuit.py. Requires NumPy only. Runtime < 1 second.
