@@ -111,3 +111,10 @@ Sheffer Operator. Extension of Odrzywołek (arXiv:2603.21852v2).
 GitHub: https://github.com/antparis/eml_star
 Zenodo: https://doi.org/10.5281/zenodo.20102448
 ```
+
+
+## EML-WM — EML World Model (Prototype)
+
+`jepa_real_baseline.py` and `jepa_eml_complex_v2.py` implement a minimal prototype of **EML-WM** (EML World Model) — a complex latent predictive architecture using eml★ and eml⁰ as exact mathematical primitives in the latent predictor.
+
+EML-WM explores whether mathematically exact complex-domain operators improve latent space stability in predictive world models. This is an original architecture — distinct from existing implementations.
