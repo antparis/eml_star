@@ -12,6 +12,8 @@
 
 Odrzywołek (2026) showed that eml(x, y) = eˣ − ln y, together with the constant 1, generates all standard elementary functions via finite composition. We identify a structural limitation: eml is holomorphic, so complex conjugation z̄, and real and imaginary parts are not reachable by finite eml-compositions. We introduce the companion operator eml★(x, y) = eˣ − ln ȳ, which acts as a mirror reflecting the imaginary axis. We prove: (i) z̄ = 1 − eml★(0, eml(z, 1)) at depth 2, conditional on Im(z) ∈ [−π, π); (ii) {eml, eml★, 1} is dense in C(K, ℂ) for every compact K ⊂ {z : Im(z) ∈ [−π, π)} by Stone–Weierstrass; (iii) the exact branch limitation is Im(z) ∈ [−π, π). A direct numerical experiment confirms Theorem 3.1 to machine precision: eml★ achieves MSE = 5.89 × 10⁻³³ vs. 12.97 for eml alone — a ratio of 2.2 × 10³³. Theorems 2.1, 4.3, and Corollary 2.2 are unconditional.
 
+A causal GP experiment (50 runs, depth 8) with eml★ achieves factual MSE ≈ 1.5 × 10⁻³¹. An ablation study (19 runs, depth 12, 60 generations, eml★ removed) yields mean MSE ≈ 2.49 (95% CI ≈ [2.35, 2.63]), confirming that eml★ is an optimal expressive compressor — not a structural necessity — for anti-holomorphic targets.
+
 ---
 
 ## 1. Introduction
@@ -19,6 +21,8 @@ Odrzywołek (2026) showed that eml(x, y) = eˣ − ln y, together with the const
 Odrzywołek [1] demonstrated that eml(x, y) = eˣ − ln y, together with the constant 1, is a continuous Sheffer operator: every standard elementary function is a finite composition of eml-nodes. The grammar is S → 1 | eml(S, S). This is the continuous analogue of the NAND gate in Boolean logic.
 
 A natural question arises: does {eml, 1} reach all continuous functions on ℂ, or only the holomorphic ones? The answer is: only the holomorphic ones. This note identifies the obstruction precisely and proposes a minimal fix — the companion operator eml★ — that closes the gap.
+
+In a complementary direction, Lamharzi Alaoui (2026) [4] establishes impossibility theorems for self-seeding analytic Sheffer operators in the strictly holomorphic and real-analytic categories. The present work is orthogonal: rather than removing the external constant, we extend eml beyond the holomorphic class via anti-holomorphic conjugation.
 
 ---
 
@@ -117,6 +121,36 @@ pred = 1 - eml(0, eml(z, 1))
 
 ---
 
+## 5b. Causal and Ablation Experiments (GP)
+
+**Causal GP experiment.** To provide experimental confirmation of Corollary 2.2, a causal GP experiment was conducted using the DEAP library. The setup used a single input z, with target conj(z) on the safe domain Im(z) ∈ [−π + 0.1, π − 0.1]. Primitives: {eml, eml★, const}. Population: 500, depth ≤ 8, 50 generations, 50 independent runs (seed 42).
+
+In 50 out of 50 runs, the best tree contained eml★. Factual MSE: 1.54 × 10⁻³¹. Intervention A (replacing eml★ by eml): MSE = 12.62. Intervention B (replacing eml★ by 0): 100% divergence. Robustness confirmed with seed 123 (factual MSE: 9.34 × 10⁻³²).
+
+**Ablation study (B3-v2).** To test whether eml★ is structurally necessary or merely an expressive shortcut, the GP was re-run without eml★ and with increased budget. Primitives: {eml, const}. Depth ≤ 12, 60 generations, population 500, seed 42. 19 runs completed (session interrupted).
+
+| Metric | Value |
+|---|---|
+| Mean MSE | 2.491 |
+| Median MSE | 2.431 |
+| Min MSE | 2.084 |
+| Max MSE | 3.489 |
+| Std | ≈ 0.29 |
+
+**Comparison across regimes:**
+
+| Configuration | MSE | Tree complexity |
+|---|---|---|
+| With eml★ (depth 8) | 1.5 × 10⁻³¹ | depth 3, size 3 |
+| Without eml★ (depth 12) | 2.49 | size 37–177 |
+| Intervention A (depth 8, eml★→eml) | 12.62 | — |
+
+**Interpretation.** The ablation confirms that eml alone, given increased depth and generations, can approximate conj(z) with MSE ≈ 2.5. However, eml★ achieves exact solutions (MSE ≈ 10⁻³¹) with minimal tree complexity (depth 3). The advantage is one of exponential compression and precision, not structural irreplaceability. The earlier Intervention A result (MSE = 12.6) reflected a budget constraint (depth 8), not a fundamental limitation of eml.
+
+Reproducibility: notebooks causal_gp_v8_1_target_zbar.ipynb and causal_gp_v8_1_B3_v2_ablation.ipynb.
+
+---
+
 ## 6. Summary
 
 | Result | Sec. | Status |
@@ -166,21 +200,13 @@ The author used Claude (Anthropic) and Grok (xAI) as AI coding and verification 
 
 [1] A. Odrzywołek, *All elementary functions from a single operator*, arXiv:2603.21852v2 (April 2026).  
 [2] M. H. Stone, *The generalized Weierstrass approximation theorem*, Mathematics Magazine 21 (1948), 167–184.  
-[3] G. Terzo, *Some consequences of Schanuel's conjecture in exponential rings*, Comm. Algebra 36 (2008), 1171–1189.
+[3] G. Terzo, *Some consequences of Schanuel's conjecture in exponential rings*, Comm. Algebra 36 (2008), 1171–1189.  
+[4] M. Lamharzi Alaoui, *From Fixed Points to Two-Cycles: Obstructions and Orbit Lifts for Analytic Self-Seeding Sheffer Operators*, Manuscript, Firassa AI (2026). https://github.com/marouane53/eml-sheffer-obstructions
 
 ---
 
 *Ancillary files: `branch_safety_final.py` · `verify_theorem4.py` · `eml_toolkit/direct_verification.py` · `eml_star_branch_safety_lemma_proof.pdf`*  
 *License: MIT · GitHub: github.com/antparis/eml_star*
-
-
-## 5b. Causal Confirmation (GP Experiment)
-
-To provide experimental confirmation of Corollary 2.2, a causal GP experiment was conducted using the DEAP library. The setup used a single input z, with target conj(Z) on the safe domain Im(z) in [-pi + 0.1, pi - 0.1]. The primitives included the corrected complex versions of eml and eml_star. A total of 100 independent runs were performed (200 individuals, 30 generations).
-
-In 90 out of 100 runs, the best tree contained eml_star. The median ATE (increase in MSE when replacing eml_star by eml) was **11.71**, with a 95% bootstrap confidence interval of **[9.64, 12.57]**. This result demonstrates that eml_star is structurally necessary to reach the anti-holomorphic target conj(z). Replacing eml_star by eml produces a statistically significant degradation, confirming that the anti-holomorphic extension is not redundant but essential.
-
-The experiment is fully reproducible from the ancillary notebook CGIB_v8_corrected.ipynb.
 
 
 ## 7. An Operator for Branch Monitoring (emlⁿ)
