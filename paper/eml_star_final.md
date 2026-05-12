@@ -12,7 +12,7 @@
 
 Odrzywołek (2026) showed that eml(x, y) = eˣ − ln y, together with the constant 1, generates all standard elementary functions via finite composition. We identify a structural limitation: eml is holomorphic, so complex conjugation z̄, and real and imaginary parts are not reachable by finite eml-compositions. We introduce the companion operator eml★(x, y) = eˣ − ln ȳ, which acts as a mirror reflecting the imaginary axis. We prove: (i) z̄ = 1 − eml★(0, eml(z, 1)) at depth 2, conditional on Im(z) ∈ [−π, π); (ii) {eml, eml★, 1} is dense in C(K, ℂ) for every compact K ⊂ {z : Im(z) ∈ [−π, π)} by Stone–Weierstrass; (iii) the exact branch limitation is Im(z) ∈ [−π, π). A direct numerical experiment confirms Theorem 3.1 to machine precision: eml★ achieves MSE = 5.89 × 10⁻³³ vs. 12.97 for eml alone — a ratio of 2.2 × 10³³. Theorems 2.1, 4.3, and Corollary 2.2 are unconditional.
 
-A causal GP experiment (50 runs, depth 8) with eml★ achieves factual MSE ≈ 1.5 × 10⁻³¹. An ablation study (19 runs, depth 12, 60 generations, eml★ removed) yields mean MSE ≈ 2.49 (95% CI ≈ [2.35, 2.63]), confirming that eml★ is an optimal expressive compressor — not a structural necessity — for anti-holomorphic targets.
+A causal GP experiment (50 runs, depth 8) with eml★ achieves factual MSE ≈ 1.5 × 10⁻³¹. An ablation study (23 runs, depth 12, 60 generations, eml★ removed) yields mean MSE ≈ 2.44 (95% CI ≈ [2.32, 2.56]), confirming that eml★ is an optimal expressive compressor — not a structural necessity — for anti-holomorphic targets.
 
 ---
 
@@ -127,22 +127,22 @@ pred = 1 - eml(0, eml(z, 1))
 
 In 50 out of 50 runs, the best tree contained eml★. Factual MSE: 1.54 × 10⁻³¹. Intervention A (replacing eml★ by eml): MSE = 12.62. Intervention B (replacing eml★ by 0): 100% divergence. Robustness confirmed with seed 123 (factual MSE: 9.34 × 10⁻³²).
 
-**Ablation study (B3-v2).** To test whether eml★ is structurally necessary or merely an expressive shortcut, the GP was re-run without eml★ and with increased budget. Primitives: {eml, const}. Depth ≤ 12, 60 generations, population 500, seed 42. 19 runs completed (session interrupted).
+**Ablation study (B3-v2).** To test whether eml★ is structurally necessary or merely an expressive shortcut, the GP was re-run without eml★ and with increased budget. Primitives: {eml, const}. Depth ≤ 12, 60 generations, population 500, seed 42. 23 runs completed (session interrupted).
 
 | Metric | Value |
 |---|---|
-| Mean MSE | 2.491 |
-| Median MSE | 2.431 |
+| Mean MSE | 2.441 |
+| Median MSE | 2.393 |
 | Min MSE | 2.084 |
 | Max MSE | 3.489 |
-| Std | ≈ 0.29 |
+| Std | ≈ 0.30 |
 
 **Comparison across regimes:**
 
 | Configuration | MSE | Tree complexity |
 |---|---|---|
 | With eml★ (depth 8) | 1.5 × 10⁻³¹ | depth 3, size 3 |
-| Without eml★ (depth 12) | 2.49 | size 37–177 |
+| Without eml★ (depth 12) | 2.44 | size 37–177 |
 | Intervention A (depth 8, eml★→eml) | 12.62 | — |
 
 **Interpretation.** The ablation confirms that eml alone, given increased depth and generations, can approximate conj(z) with MSE ≈ 2.5. However, eml★ achieves exact solutions (MSE ≈ 10⁻³¹) with minimal tree complexity (depth 3). The advantage is one of exponential compression and precision, not structural irreplaceability. The earlier Intervention A result (MSE = 12.6) reflected a budget constraint (depth 8), not a fundamental limitation of eml.
