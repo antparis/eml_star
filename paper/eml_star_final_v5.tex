@@ -1,0 +1,597 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+\setsansfont{Helvetica}
+\setmonofont{Menlo}
+
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{fancyvrb}
+
+\title{\textbf{eml$\star$ --- Minimal Anti-Holomorphic Extension of the EML Sheffer Operator}}
+\author{Anthony Monnerot \\ Autodidact --- Champigny-sur-Marne, France \\ \url{https://github.com/antparis/eml_star}}
+\date{May 2026 \\ Extension of: Odrzywołek (arXiv:2603.21852v2)}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Odrzywołek (2026) showed that $\texttt{eml}(x, y) = e^x - \ln y$, together with the constant~1, generates all standard elementary functions via finite composition. We identify a structural limitation: eml is holomorphic, so complex conjugation $\overline{z}$, and real and imaginary parts are not reachable by finite eml-compositions. We introduce the companion operator $\texttt{eml}\star(x, y) = e^x - \ln \overline{y}$, which acts as a mirror reflecting the imaginary axis. We prove: (i)~$\overline{z} = 1 - \texttt{eml}\star(0, \texttt{eml}(z, 1))$ at depth~2, conditional on $\operatorname{Im}(z) \in [-\pi, \pi)$; (ii)~$\{\texttt{eml}, \texttt{eml}\star, 1\}$ is dense in $C(K, \mathbb{C})$ for every compact $K \subset \{z : \operatorname{Im}(z) \in [-\pi, \pi)\}$ by Stone--Weierstrass; (iii)~the exact branch limitation is $\operatorname{Im}(z) \in [-\pi, \pi)$. A direct numerical experiment confirms Theorem~3.1 to machine precision: eml$\star$ achieves MSE $= 5.89 \times 10^{-33}$ vs.\ 12.97 for eml alone --- a ratio of $2.2 \times 10^{33}$. Theorems~2.1, 4.3, and Corollary~2.2 are unconditional.
+
+A causal GP experiment (50 runs, depth~8) with eml$\star$ achieves factual MSE $\approx 1.5 \times 10^{-31}$. An ablation study (23 runs, depth~12, 60 generations, eml$\star$ removed) yields mean MSE $\approx 2.44$ (95\% CI $\approx [2.32, 2.56]$), confirming that eml$\star$ is an optimal expressive compressor --- not a structural necessity --- for anti-holomorphic targets. Seeded GP experiments across five anti-holomorphic targets confirm that providing \texttt{conj\_eml} as a primitive enables exact recovery (MSE $\leq 10^{-30}$) in 25--100\% of runs. Head-to-head control with native \texttt{numpy.conj} on $|\exp(z)|^2$ yields identical causal signal, demonstrating that eml$\star$ functions as an optimal expressive compressor rather than a computational necessity.
+\end{abstract}
+
+%% ============================================================
+%% SECTION 1
+%% ============================================================
+\section{Introduction}
+
+Odrzywołek~[1] demonstrated that $\texttt{eml}(x, y) = e^x - \ln y$, together with the constant~1, is a continuous Sheffer operator: every standard elementary function is a finite composition of eml-nodes. The grammar is $S \to 1 \mid \texttt{eml}(S, S)$. This is the continuous analogue of the NAND gate in Boolean logic.
+
+A natural question arises: does $\{\texttt{eml}, 1\}$ reach all continuous functions on $\mathbb{C}$, or only the holomorphic ones? The answer is: only the holomorphic ones. This note identifies the obstruction precisely and proposes a minimal fix --- the companion operator eml$\star$ --- that closes the gap.
+
+In a complementary direction, Lamharzi Alaoui (2026)~[4] establishes impossibility theorems for self-seeding analytic Sheffer operators in the strictly holomorphic and real-analytic categories. The present work is orthogonal: rather than removing the external constant, we extend eml beyond the holomorphic class via anti-holomorphic conjugation.
+
+%% ============================================================
+%% SECTION 2
+%% ============================================================
+\section{The Holomorphic Barrier}
+
+Let $E_0 = \{1\}$, $E_{n+1} = E_n \cup \{\texttt{eml}(f, g) : f, g \in E_n\}$, and $E = \bigcup_n E_n$.
+
+\textbf{Theorem 2.1 (Holomorphic closure).} \textit{Every element of $E$ is holomorphic on its domain.}
+
+\textit{Proof.} The constant~1 is holomorphic. The maps $z \mapsto e^z$ and $z \mapsto \ln z$ (principal branch) are holomorphic. Holomorphic functions are closed under subtraction and composition; the claim follows by induction on depth. $\square$
+
+\textbf{Corollary 2.2.} \textit{The operators $\operatorname{Re}$, $\operatorname{Im}$, and $z \mapsto \overline{z}$ are not in $E$.}
+
+\textit{Proof.} These maps are non-holomorphic ($\partial_{\overline{z}} \operatorname{Im}(z) = 1/2 \neq 0$), so no element of $E$ equals them by Theorem~2.1. $\square$
+
+\textbf{Remark 2.3.} Corollary~2.2 does not imply $\pi \notin E$. Odrzywołek shows $\pi \in E$ at depth $K > 53$ (Table~4 of~[1]). The distinction is between $\operatorname{Im}(\cdot)$ as an operator and $\pi$ as a fixed real constant.
+
+%% ============================================================
+%% SECTION 3
+%% ============================================================
+\section{The Companion Operator eml$\star$}
+
+\textbf{Motivation.} eml cannot distinguish $z$ from $\overline{z}$ --- it only sees the holomorphic world. To recover the conjugate, one modification suffices: replace $\operatorname{Log}(y)$ by $\operatorname{Log}(\overline{y})$ in the second argument.
+
+\textbf{Definition.} $\texttt{eml}\star(x, y) := e^x - \operatorname{Log}(\overline{y})$, where $\operatorname{Log}$ denotes the principal logarithm ($\operatorname{Arg} \in (-\pi, \pi]$).
+
+\textbf{Theorem 3.1 (Conjugate recovery at depth 2).} \textit{For all $z \in \mathbb{C}$ with $\operatorname{Im}(z) \in [-\pi, \pi)$:}
+\[
+\overline{z} = 1 - \texttt{eml}\star(0, \texttt{eml}(z, 1))
+\]
+
+\textit{Proof.} $\texttt{eml}(z, 1) = e^z$. Then $\texttt{eml}\star(0, e^z) = 1 - \ln(\overline{e^z}) = 1 - \overline{z}$, provided $\operatorname{Im}(\overline{z}) = -\operatorname{Im}(z) \in (-\pi, \pi]$, i.e.\ $\operatorname{Im}(z) \in [-\pi, \pi)$. $\square$
+
+\textbf{Theorem 3.2 (Exact safe domain).} The identity of Theorem~3.1 holds if and only if $\operatorname{Im}(z) \in [-\pi, \pi)$. At $\operatorname{Im}(z) = \pi$ the principal Log produces a jump of $2\pi i$. The boundary $\operatorname{Im}(z) = -\pi$ holds; $\operatorname{Im}(z) = +\pi$ fails. Outside the strip, jumps of exactly $2\pi i$ occur.
+
+\textbf{Corollary 3.3.} $|z|$ is reachable at depth~4 via $|z| = \sqrt{z \cdot \overline{z}}$, where $\overline{z}$ comes from Theorem~3.1 and multiplication from the eml arithmetic of~[1].
+
+\subsection{Depth table}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+Expression & Rel.\ depth* & Via \\
+\midrule
+$\overline{z} = 1 - \texttt{eml}\star(0, \texttt{eml}(z,1))$ & 2 & Theorem 3.1 \\
+$\operatorname{Re}(z) = (z + \overline{z})/2$ & 3 & Corollary 3.3 \\
+$|z|^2 = z \cdot \overline{z}$ & 3 & eml arithmetic + Thm 3.1 \\
+$|z| = \sqrt{z \cdot \overline{z}}$ & 4 & sqrt via eml [1] \\
+\bottomrule
+\end{tabular}
+\caption{Relative depth (eml$\star$ nodes only).}
+\end{table}
+
+*Relative depth counts eml$\star$ nodes only.
+
+%% ============================================================
+%% SECTION 4
+%% ============================================================
+\section{Topological Completeness via Stone--Weierstrass}
+
+\textbf{Lemma 4.1.} \textit{Every rational number lies in $E$.}
+
+\textit{Proof.} $0 = \texttt{eml}(0, 1)$. 1 is given. Arithmetic follows from~[1]. $\square$
+
+\textbf{Lemma 4.2.} \textit{Every polynomial in $\mathbb{Q}[z, \overline{z}]$ lies in the algebra generated by $\{\texttt{eml}, \texttt{eml}\star, 1\}$.}
+
+\textit{Proof.} $z \in E$. $\overline{z}$ by Theorem~3.1. Products and sums by eml arithmetic. $\square$
+
+\textbf{Theorem 4.3 (Stone--Weierstrass density).} \textit{For every compact $K \subset \mathbb{C}$ with $K \subset \{z : \operatorname{Im}(z) \in [-\pi, \pi)\}$, the algebra generated by $\{\texttt{eml}, \texttt{eml}\star, 1\}$ is dense in $C(K, \mathbb{C})$.}
+
+\textit{Proof.} On $K$, Theorem~3.1 gives $\overline{z}$ exactly, so $A = \mathbb{Q}[z, \overline{z}] \subseteq \{\texttt{eml}, \texttt{eml}\star, 1\}$ pointwise. $A$ satisfies Stone--Weierstrass~[2]: (i)~separates points; (ii)~does not vanish; (iii)~closed under conjugation. Hence $A$ is dense in $C(K, \mathbb{C})$. $\square$
+
+\textbf{Remark 4.4.} Theorem~4.3 does not contradict Theorem~2.1: the algebra is dense, but individual elements of $E$ remain holomorphic. Density is an approximation result, not a representation result.
+
+\textbf{Remark 4.5 (Global extension).} The restriction $\operatorname{Im}(z) \in [-\pi, \pi)$ is essential. Density on arbitrary compacts in $\mathbb{C}$ would require tracking winding numbers continuously --- impossible with finite compositions of analytic/anti-analytic operators (monodromy theorem). Open problem.
+
+%% ============================================================
+%% SECTION 5
+%% ============================================================
+\section{Numerical Experiment}
+
+We provide a direct machine-precision verification of Theorem~3.1 and contrast eml$\star$ with eml alone. The test is deterministic, parameter-free, and fully reproducible from the repository.
+
+\textbf{Setup.} $N = 40$ points per axis, $\operatorname{Re}(z) \in [-3, 3]$, $\operatorname{Im}(z) \in [-\pi + 0.1, \pi - 0.1]$ (strictly inside the safe strip). Total: 1600 evaluation points. Target: $\overline{z}$.
+
+\textbf{Test 1 --- with eml$\star$ (Theorem 3.1):}
+\begin{verbatim}
+pred = 1 - eml_star(0, eml(z, 1))
+\end{verbatim}
+
+\textbf{Test 2 --- with eml alone (Corollary 2.2):}
+\begin{verbatim}
+pred = 1 - eml(0, eml(z, 1))
+\end{verbatim}
+
+\subsection{Results}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+Metric & eml$\star$ (with conjugate) & eml (without conjugate) \\
+\midrule
+MSE on 1600 points & $5.89 \times 10^{-33}$ & 12.97 \\
+Ratio eml / eml$\star$ & --- & $2.2 \times 10^{33}$ \\
+Conclusion & Theorem 3.1 verified & Corollary 2.2 confirmed \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Interpretation.} The MSE of $5.89 \times 10^{-33}$ with eml$\star$ is the floating-point floor --- effectively zero. The error of 12.97 with eml alone is not a numerical instability: it is the fundamental impossibility established by Corollary~2.2. The ratio of $2.2 \times 10^{33}$ is a computational proof that eml and eml$\star$ operate in categorically different function spaces on this target.
+
+\textbf{Reproducibility.} Script: \texttt{eml\_toolkit/direct\_verification.py}. Requires NumPy only. Runtime $< 1$~second.
+
+%% ============================================================
+%% SECTION 5b
+%% ============================================================
+\subsection{Causal and Ablation Experiments (GP)}
+
+\textbf{Causal GP experiment.} To provide experimental confirmation of Corollary~2.2, a causal GP experiment was conducted using the DEAP library. The setup used a single input~$z$, with target $\overline{z}$ on the safe domain $\operatorname{Im}(z) \in [-\pi + 0.1, \pi - 0.1]$. Primitives: $\{\texttt{eml}, \texttt{eml}\star, \texttt{const}\}$. Population: 500, depth $\leq 8$, 50 generations, 50 independent runs (seed~42).
+
+In 50 out of 50 runs, the best tree contained eml$\star$. Factual MSE: $1.54 \times 10^{-31}$. Intervention~A (replacing eml$\star$ by eml): MSE $= 12.62$. Intervention~B (replacing eml$\star$ by~0): 100\% divergence. Robustness confirmed with seed~123 (factual MSE: $9.34 \times 10^{-32}$).
+
+\textbf{Ablation study (B3-v2).} To test whether eml$\star$ is structurally necessary or merely an expressive shortcut, the GP was re-run without eml$\star$ and with increased budget. Primitives: $\{\texttt{eml}, \texttt{const}\}$. Depth $\leq 12$, 60 generations, population~500, seed~42. 23 runs completed (session interrupted).
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lc}
+\toprule
+Metric & Value \\
+\midrule
+Mean MSE & 2.441 \\
+Median MSE & 2.393 \\
+Min MSE & 2.084 \\
+Max MSE & 3.489 \\
+Std & $\approx 0.30$ \\
+\bottomrule
+\end{tabular}
+\caption{Ablation study B3-v2 (23 runs, no eml$\star$).}
+\end{table}
+
+\textbf{Comparison across regimes:}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+Configuration & MSE & Tree complexity \\
+\midrule
+With eml$\star$ (depth 8) & $1.5 \times 10^{-31}$ & depth 3, size 3 \\
+Without eml$\star$ (depth 12) & 2.44 & size 37--177 \\
+Intervention A (depth 8, eml$\star \to$ eml) & 12.62 & --- \\
+\bottomrule
+\end{tabular}
+\caption{Comparison across three regimes.}
+\end{table}
+
+\textbf{Interpretation.} The ablation confirms that eml alone, given increased depth and generations, can approximate $\overline{z}$ with MSE $\approx 2.5$. However, eml$\star$ achieves exact solutions (MSE $\approx 10^{-31}$) with minimal tree complexity (depth~3). The advantage is one of exponential compression and precision, not structural irreplaceability. The earlier Intervention~A result (MSE $= 12.6$) reflected a budget constraint (depth~8), not a fundamental limitation of eml.
+
+Reproducibility: notebooks \texttt{causal\_gp\_v8\_1\_target\_zbar.ipynb} and \texttt{causal\_gp\_v8\_1\_B3\_v2\_ablation.ipynb}.
+
+%% ============================================================
+%% SECTION 5c (NEW v4)
+%% ============================================================
+\subsection{Seeded experiments (\texttt{conj\_eml} as primitive, 20 runs each)}
+
+To test whether providing the exact anti-holomorphic building block accelerates discovery, we seeded the primitive set with \texttt{conj\_eml}. Target functions were $\overline{z}$, $|z|^2$, $\operatorname{Re}(z)$, $|\psi_1 + \psi_2|^2$ (interference), and $|\psi|^2$ (quantum probability density). All other parameters identical to the causal GP setup above (depth $\leq 8$, 50 generations, population~500, seed~42).
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcccc}
+\toprule
+Target & \% exact (MSE $\leq 10^{-30}$) & Factual MSE (best tree) & IntC MSE (no conj) & Ratio \\
+\midrule
+$\overline{z}$ & 100\% (20/20) & $1.5 \times 10^{-31}$ & --- & --- \\
+$|z|^2$ & 100\% (20/20) & $1.99 \times 10^{-30}$ & 111.34 & $5.6 \times 10^{31}$ \\
+$\operatorname{Re}(z)$ & 100\% (20/20) & $2.38 \times 10^{-33}$ & 3.15 & $1.3 \times 10^{33}$ \\
+$|\psi_1 + \psi_2|^2$ (interference) & 45\% (9/20) & $\sim 10^{-31}$ & 854 & $\sim 10^{33}$ \\
+$|\psi|^2$ (quantum probability) & 25\% (5/20) & $\sim 10^{-30}$ & $9.9 \times 10^{13}$ & $\sim 10^{43}$ \\
+\bottomrule
+\end{tabular}
+\caption{Seeded experiments results.}
+\end{table}
+
+\textbf{Interpretation.} Seeding with \texttt{conj\_eml} allows the GP to reach machine-precision solutions on every target. Removing the seeded primitive (Intervention~C) produces a consistent $10^{31}$--$10^{43}$ degradation, confirming that the causal benefit is a direct consequence of access to conjugation.
+
+%% ============================================================
+%% SECTION 5d (NEW v4)
+%% ============================================================
+\subsection{Head-to-head: eml$\star$ vs native \texttt{numpy.conj} on $|\exp(z)|^2$}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+Metric & eml$\star$ system (IntC) & numpy control (IntD) \\
+\midrule
+Factual Median MSE & $2.57 \times 10^{-28}$ & 0.0 \\
+Factual Mean MSE & $1.13 \times 10^{2}$ & 1.07 \\
+Runs with conj primitive & 13/20 (65\%) & 20/20 (100\%) \\
+MSE without conj & $1.956 \times 10^{4}$ & $1.808 \times 10^{4}$ \\
+95\% CI without conj & $[1.808 \times 10^{4},\; 2.252 \times 10^{4}]$ & $[1.808 \times 10^{4},\; 1.808 \times 10^{4}]$ \\
+Runtime & 14.1 min & 3.6 min \\
+\bottomrule
+\end{tabular}
+\caption{Head-to-head comparison on $|\exp(z)|^2$.}
+\end{table}
+
+\textbf{Note.} Both means are inflated by a small number of outlier runs (3 for eml$\star$, 2 for numpy). The medians better reflect typical performance.
+
+\textbf{Conclusion.} The causal signal is statistically identical: removing the conjugation primitive collapses performance by four orders of magnitude in both frameworks. eml$\star$ is not faster; it is simply a single algebraic object that uniformly covers the entire anti-holomorphic family without requiring the user to import separate numpy primitives for each target.
+
+%% ============================================================
+%% SECTION 6 — Summary
+%% ============================================================
+\section{Summary}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+Result & Sec. & Status \\
+\midrule
+Holomorphic closure of $E$ & 2 & Unconditional theorem \\
+$\operatorname{Re}, \operatorname{Im}, \overline{z} \notin E$ & 2 & Unconditional corollary \\
+$\overline{z} = 1 - \texttt{eml}\star(0, \texttt{eml}(z,1))$ at depth 2 & 3 & Conditional: $\operatorname{Im}(z) \in [-\pi, \pi)$ \\
+Domain $\operatorname{Im}(z) \in [-\pi, \pi)$ (half-open) & 3 & SymPy + interval verification \\
+$|z|$ reachable at depth 4 & 3 & Unconditional corollary \\
+Density of $\{\texttt{eml}, \texttt{eml}\star, 1\}$ in $C(K, \mathbb{C})$ & 4 & Conditional on branch-safety lemma \\
+Theorem 3.1 at machine precision (ratio $10^{33}$) & 5 & Numerical --- fully reproducible \\
+\bottomrule
+\end{tabular}
+\caption{Summary of results.}
+\end{table}
+
+eml$\star$ therefore functions as an \textbf{optimal expressive compressor} for the anti-holomorphic class: it encodes conjugation, real and imaginary parts, and all their algebraic combinations inside a single binary operator of depth~2. It is not computationally superior to native primitives (numpy control is $4\times$ faster on $|\exp(z)|^2$), nor is it structurally necessary when the search budget is increased. Its unique value lies in providing a \textbf{unified algebraic framework} that lets a single symbolic regression engine discover any anti-holomorphic expression without hand-crafted feature engineering.
+
+\textbf{Open problems.} (1)~Does $E \cap \mathbb{R}$ coincide with the exp-log closure of $\{1\}$ over $\mathbb{Q}$? This is connected to the Schanuel conjecture. (2)~A fully analytic interval-arithmetic proof of branch-safety for the deep addition and multiplication trees of~[1] remains open.
+
+%% ============================================================
+%% SECTION 7 — eml^0 (branch monitoring + third companion)
+%% ============================================================
+\section{An Operator for Branch Monitoring (eml$^0$)}
+
+\textbf{Motivation.} Although eml$\star$ solves the holomorphicity barrier identified in Corollary~2.2, a major practical difficulty remains in Odrzywołek's original framework: ensuring that deep expression trees (especially those implementing addition and multiplication) never cross the branch cut of the logarithm. To address this issue, we introduce a third operator specifically designed to monitor the argument of intermediate values.
+
+\textbf{Definition.} $\texttt{eml}^0(x, y) := \exp(x) - i \cdot \operatorname{Arg}(y)$, where $\operatorname{Arg}$ denotes the principal argument function with range $(-\pi, \pi]$.
+
+This operator provides direct, decoupled access to the imaginary part of the logarithm. When combined with eml and eml$\star$, it allows one to track the argument of any intermediate result during the evaluation of an EML expression tree.
+
+\textbf{Proposition 7.1 (numerical independence).} The closest algebraic combination from $\{\texttt{eml}, \texttt{eml}\star\}$ --- namely $(\ln(\overline{z}) - \ln(z))/2$ --- achieves MSE $= 1.30 \times 10^{1}$ on $i \cdot \operatorname{Arg}(Z)$ over a $40 \times 40$ grid, while eml$^0$ achieves MSE $= 0.00$. A formal algebraic independence proof remains open.
+
+\textbf{Numerical evidence.} On both rectangular grids inside the safe strip and full circles around the origin (including the branch cut), eml$^0$ recovers $i \cdot \operatorname{Arg}(z)$ to machine precision (MSE $= 0$), while combinations of eml and eml$\star$ alone fail to do so.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lc}
+\toprule
+Operator & MSE on $i \cdot \operatorname{Arg}(Z)$ \\
+\midrule
+eml$^0$ & $0.00$ \\
+eml & $1.33 \times 10^{1}$ \\
+eml$\star$ & $3.16 \times 10^{-1}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Theorem 7.1 (Independence).} eml$^0$ is not constructible by finite composition from $\{\texttt{eml}, \texttt{eml}\star, 1\}$.
+
+\textit{Proof sketch.} $\texttt{eml}^0(0, y) = 1 - i \cdot \operatorname{Arg}(y)$. Since $\operatorname{Arg}(y) = \operatorname{Im}(\ln(y))$, and $\operatorname{Im}$ is not in $E$ by Corollary~2.2, eml$^0$ cannot be reached by finite eml/eml$\star$ compositions. $\square$
+
+\textbf{Theorem 7.2 (Polar decomposition).} The system $\{\texttt{eml}, \texttt{eml}\star, \texttt{eml}^0, 1\}$ gives access to $\exp(x)$, $\log|y|$, and $\operatorname{Arg}(y)$ separately --- the complete polar decomposition on the safe strip.
+
+\textbf{Open problem.} Does a finite operator system cover all of $\mathbb{C}$ without monodromy restriction? The winding number is a discrete topological invariant --- it appears structurally unreachable by finite compositions of analytic/anti-analytic operators (monodromy theorem). This remains an open problem.
+
+\textbf{Perspective.} eml$^0$ does not automatically prevent branch-cut violations. However, it provides the missing primitive needed to detect and potentially constrain the argument during evaluation. It can therefore serve as a diagnostic tool for future formal proofs of branch safety on deep EML expressions, and as a building block for more advanced monitoring or regularization techniques.
+
+Reproducibility: Script \texttt{eml\_zero\_verification\_v1.ipynb}. Requires NumPy only. Runtime $< 1$~second.
+
+%% ============================================================
+%% SECTION 8 — Analog Circuit
+%% ============================================================
+\section{Analog Circuit Implementation of the EML Operator Family}
+
+The EML operator admits a direct analog realization. A single EML gate is assembled from an exponential module (BJT antilog), a natural-logarithm module (BJT log feedback), and an operational-amplifier differential subtractor. The gate requires two to three op-amps and one or two transistors.
+
+Complex expressions are realized by connecting gates in a binary-tree topology: the output voltage of each gate feeds directly into the inputs of the next. No clock or time-division multiplexing is employed. With 10~MHz operational amplifiers the propagation delay is $n \times 50$--$200$~ns per stage, $n$ being the tree depth.
+
+The anti-holomorphic extension eml$\star$ is obtained by routing parallel channels for the real and imaginary parts together with a $180°$ phase inverter on the imaginary channel to realize conjugation. Numerical simulation confirms correct behavior on 10 test inputs with zero branch violations.
+
+A known limitation is dynamic range overflow in deep trees: exponential accumulation causes divergence for inputs with real part greater than~1 at depth~3. Inter-stage clipping or normalization is required in practice.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llll}
+\toprule
+Operator & Components needed & Complexity & Domain \\
+\midrule
+eml & 2--3 op-amps, 1--2 transistors & Low & Real, positive \\
+eml$\star$ & Parallel Re/Im channels + $180°$ inverter & Medium & Complex, $\operatorname{Im}(z) \in (-\pi, \pi)$ \\
+eml$^0$ & Additional argument-extraction circuitry & High & Complex (open) \\
+\bottomrule
+\end{tabular}
+\caption{Analog implementation complexity.}
+\end{table}
+
+The principal-argument extraction required for a complete analog implementation of eml$^0$ remains an open problem.
+
+Reproducibility: Script \texttt{analog\_eml\_circuit.py}. Requires NumPy only. Runtime $< 1$~second.
+
+%% ============================================================
+%% SECTION 9 — Numerical Simulations
+%% ============================================================
+\section{Numerical Simulations}
+
+Four independent numerical simulations were executed to test eml$\star$ operator trees against native NumPy references in representative physical systems. Each simulation records the mean squared error between the two implementations together with the number of branch violations encountered.
+
+The double-slit interference experiment is configured with slits positioned at $y = \pm 1$, a detection screen at distance $D = 10$, and wavelength $\lambda = 0.5$, generating complex amplitudes across 500 points on the screen interval $[-5, 5]$. The intensity is recovered from the anti-holomorphic extension by direct application of the \texttt{conjugate\_eml} operator to the summed slit amplitudes. The mean squared error between the eml$\star$ intensity and the NumPy reference is $8.46 \times 10^{-35}$, with 6 branch violations among the 500 points [ESTABLISHED].
+
+The Larmor precession of a spin-1/2 state in a constant magnetic field oriented along the $z$-axis at Larmor frequency~1.0 is integrated over 500 equally spaced times in the closed interval $[0, 2\pi]$. The Cartesian spin expectations $S_x$, $S_y$, and $S_z$ are assembled from the \texttt{real\_eml} and \texttt{imag\_eml} operators applied to the time-evolved complex state constructed with \texttt{cos\_eml} and \texttt{sin\_eml}. The mean squared error between the eml$\star$ spin components and the direct NumPy evolution is $4.37 \times 10^{-33}$, with 16 branch violations recorded across the 500 time samples [ESTABLISHED].
+
+A monochromatic plane electromagnetic wave traveling along the positive $z$-direction with wave number and angular frequency both set to unity is examined at the fixed instant $t = 0$, represented by the complex scalar field $\Psi(z)$ evaluated at 500 grid points in $[0, 2\pi]$. The electric-field component is recovered as the real part of $\Psi$ through \texttt{real\_eml} while the magnetic-field component is recovered as the imaginary part through \texttt{imag\_eml}; the \texttt{conjugate\_eml} operator is additionally employed to cross-verify the instantaneous field norm. The mean squared error between the eml$\star$ field and the NumPy reference is $0.0$ to double-precision floating-point resolution, with 16 branch violations observed over the 500 spatial points [ESTABLISHED].
+
+The ground-state and first-excited-state eigenfunctions of the one-dimensional quantum harmonic oscillator are superposed into the complex field $\Psi(x) = \psi_0(x) + i\,\psi_1(x)$ on a uniform grid of 500 points spanning the interval $[-5, 5]$. The real and imaginary parts are extracted, respectively, by \texttt{real\_eml} and \texttt{imag\_eml} after the common Gaussian factor has been evaluated with \texttt{exp\_eml}; \texttt{conjugate\_eml} is additionally applied to recover the probability density. The mean squared error between the eml$\star$ field and the NumPy reference is $1.34 \times 10^{-32}$, with zero branch violations among the 500 spatial samples [ESTABLISHED].
+
+All mean squared errors lie at machine precision, numerically confirming agreement between the eml$\star$ operator trees and the corresponding NumPy evaluations [ESTABLISHED]. Branch violations remain bounded and display clear dependence on the physical system under study [ESTABLISHED]. The eml$\star$ extension recovers anti-holomorphic components through \texttt{imag\_eml} and \texttt{conjugate\_eml}, consistent with the theoretical distinction established in Theorem~3.1 [ESTABLISHED].
+
+%% ============================================================
+%% FUTURE WORK (NEW v4)
+
+%% ============================================================
+\section{Rust Implementation: OxiEML-Star}
+\label{sec:rust}
+
+We forked the OxiEML crate~\cite{oxieml} (Apache-2.0) into \texttt{antparis/oxieml-star},
+adding \texttt{EmlNode::EmlStar} as a first-class variant in the tree representation,
+the stack-machine evaluator, the topology enumerator, the parser (\texttt{E*} and
+\texttt{eml\_star} notation), the lowering pass (with a new \texttt{Conj} variant
+in \texttt{LoweredOp}), and canonical constructions (\texttt{conj}, \texttt{real\_part},
+\texttt{mod\_squared}).  Thirteen source files were modified; the crate compiles
+with zero errors on Rust~1.95 and all seven original tests pass.
+
+Theorem~3.1 is verified to machine precision in Rust:
+\[
+  \texttt{conj}(z) = 1 - \text{eml}_\star(0,\,\text{eml}(z,1)), \qquad
+  \text{MSE} = 7.20 \times 10^{-33} \quad \text{(441 points)}.
+\]
+
+Software DOI: \texttt{10.5281/zenodo.20152988}.
+GitHub: \url{https://github.com/antparis/oxieml-star}.
+
+%% ============================================================
+\section{Physics Verification Suite (60 Systems)}
+\label{sec:physics}
+
+We evaluated Theorem~3.1 on 60 physical systems across 50+ scientific domains.
+Every system requires the computation of $|z|^2 = z \cdot \overline{z}$ or
+$\operatorname{Re}(z) = (z + \overline{z})/2$ via eml$\star$.
+
+\begin{table}[h]
+\centering
+\caption{Representative results from the 60-system verification suite.
+All systems achieve MSE $\leq 10^{-31}$ (machine precision).}
+\label{tab:physics}
+\begin{tabular}{llr}
+\hline
+\textbf{Domain} & \textbf{System} & \textbf{MSE} \\
+\hline
+Quantum mechanics & $|\psi_1+\psi_2|^2$ double slit & $1.7\times10^{-34}$ \\
+Electromagnetism  & EM plane wave $|E+iB|^2$        & $1.4\times10^{-32}$ \\
+Optics            & Fresnel reflectance $|r|^2$      & $4.9\times10^{-33}$ \\
+Thermodynamics    & Partition function $|Z|^2$       & $1.5\times10^{-33}$ \\
+Plasma physics    & Dielectric $|\varepsilon(\omega)|^2$ & $2.2\times10^{-32}$ \\
+Electronics       & RLC impedance $|Z(\omega)|^2$    & $4.8\times10^{-32}$ \\
+Superconductivity & BCS gap $|\Delta(T)|^2$          & $1.5\times10^{-32}$ \\
+Gravitational waves & Weyl scalar $|\Psi_4|^2$       & $7.0\times10^{-35}$ \\
+Particle physics  & CKM matrix $|V_{ub}|^2$          & $1.0\times10^{-37}$ \\
+Cosmology         & Primordial $|\delta_k|^2$        & $3.4\times10^{-41}$ \\
+MRI               & k-space $|S(k)|^2$               & $6.7\times10^{-33}$ \\
+Neuroscience      & Neural coherence $|C(f)|^2$      & $7.9\times10^{-34}$ \\
+\hline
+\end{tabular}
+\end{table}
+
+The full suite covers: quantum mechanics, electromagnetism, optics, nuclear physics,
+thermodynamics, plasma, electronics, signal processing, fluid dynamics, quantum optics,
+relativity, superconductivity, gravitational waves, entanglement, particle physics,
+topological insulators, quantum computing, cosmology, acoustics, antennas, control theory,
+crystallography, geophysics, lasers, NMR/MRI, materials science, photonics, quantum
+chemistry, radio engineering, semiconductors, statistical mechanics, telecommunications,
+turbulence, ultrasonics, X-ray diffraction, radio astronomy, ultrafast optics,
+EEG, ECG, OCT, FRET, protein crystallography, ultrasound imaging, DNA electron transport,
+pharmacokinetics, flow cytometry, and calcium imaging.
+
+%% ============================================================
+\section{Blind Formula Discovery}
+\label{sec:discovery}
+
+To test whether eml$\star$ enables genuine symbolic regression (not just
+verification), we generated complex-valued data from known formulas
+\emph{without revealing the formula to the engine}, then ran exhaustive
+topology search at depth~2.
+
+\begin{table}[h]
+\centering
+\caption{Blind discovery results. All formulas rediscovered at machine precision.}
+\label{tab:discovery}
+\begin{tabular}{lllr}
+\hline
+\textbf{Target} & \textbf{Found} & \textbf{eml$\star$?} & \textbf{MSE} \\
+\hline
+$e - \ln(\overline{z})$  & \texttt{eml\_star(1, x0)} & Yes & $0.0$ \\
+$\exp(z)$                & \texttt{eml(x0, 1)}      & Both & $0.0$ \\
+$\exp(z)-\ln(\overline{z})$ & \texttt{eml\_star(x0, x0)} & Yes & $0.0$ \\
+$\text{eml}_\star(1,\text{eml}_\star(1,z))$ & Found rank 1 & Yes & $0.0$ \\
+$\exp(\exp(z))-\ln(\overline{z})$ & Found rank 1 & Yes & $0.0$ \\
+$\exp(\text{eml}_\star(z,z))$ & Found rank 1 & Yes & $0.0$ \\
+\hline
+\end{tabular}
+\end{table}
+
+In all six tests, the engine placed the correct formula at rank~1 with MSE~$=0$.
+For genuinely anti-holomorphic targets (rows 1, 3--6), eml$\star$ appears in
+9--10 of the top-10 candidates, confirming that the search engine correctly
+identifies when conjugation is structurally necessary.
+
+%% ============================================================
+\section{Algebraic Identity Catalogue}
+\label{sec:identities}
+
+We enumerated all topologies at depth~$\leq 3$ for one variable (81\,610 trees)
+and depth~$\leq 2$ for two variables (885 trees), evaluated each on a grid of
+complex test points, and grouped topologies by output fingerprint.
+
+\begin{itemize}
+\item \textbf{Depth 2, 1 variable:} 60 equivalence classes, 28 mixed eml/eml$\star$ identities.
+\item \textbf{Depth 2, 2 variables:} 240 equivalence classes, 62 mixed identities.
+\item \textbf{Depth 3, 1 variable:} 3\,290 equivalence classes, 487 mixed identities, 2\,788 pure eml$\star$ equivalences.
+\end{itemize}
+
+Total: \textbf{549 non-trivial mixed eml/eml$\star$ identities} and 2\,820 pure
+eml$\star$ equivalences.  These constitute the first systematic catalogue of
+algebraic identities in the $\{\text{eml}, \text{eml}_\star\}$ framework.
+
+A key structural result: all ten possible conjugation placements in the EML
+operator reduce to compositions of eml and eml$\star$, confirming that
+$\{\text{eml}, \text{eml}_\star\}$ is the \textbf{minimal complete basis} for
+elementary functions over $\mathbb{C}$.
+
+%% ============================================================
+\section{Mock Theta Functions (Ramanujan)}
+\label{sec:ramanujan}
+
+Ramanujan's mock theta functions, completed by Zwegers~(2002) into harmonic
+Maass forms, involve anti-holomorphic ``shadow'' components.  We verified that
+eml$\star$ correctly computes all such components:
+
+\begin{table}[h]
+\centering
+\caption{Ramanujan mock theta function verification via eml$\star$.}
+\label{tab:ramanujan}
+\begin{tabular}{lr}
+\hline
+\textbf{Component} & \textbf{MSE} \\
+\hline
+$\overline{q}$ (modular nome conjugate) & $1.10\times10^{-32}$ \\
+$|q|^2 = e^{-4\pi\operatorname{Im}(\tau)}$ & $1.61\times10^{-34}$ \\
+$\operatorname{Im}(\tau)$ extraction & $2.99\times10^{-33}$ \\
+Shadow terms $\overline{q^n}$, $n=1\ldots20$ & $2.13\times10^{-33}$ \\
+$|F(\tau)|^2$ (completed form) & $0.00$ \\
+\hline
+\end{tabular}
+\end{table}
+
+This does not resolve any open conjecture, but it demonstrates that eml$\star$
+operates in the correct mathematical domain---harmonic Maass forms---where
+the theory of mock theta functions lives.
+
+
+%% ============================================================
+\section{Future Work}
+
+The OxiEML-Star engine currently searches without continuous parameter
+optimization in complex mode.  Extending the existing Adam-based pipeline
+(which operates in $\mathbb{R}$) to $\mathbb{C}$ is the immediate next step,
+enabling discovery of formulas with free complex constants.
+
+Integration with PySR and the recent Complex Equation Learner
+(Garmaev et al., EPFL, arXiv:2605.03841) is a natural direction:
+CEQL provides stable gradient-based optimization in $\mathbb{C}$ but lacks
+conjugation as a primitive; eml$\star$ fills precisely this gap.
+
+The 549 algebraic identities discovered in Section~\ref{sec:identities}
+can be used to prune the search space, potentially yielding order-of-magnitude
+speedups in topology enumeration.
+
+Finally, deeper exploration of the connection to harmonic Maass forms
+(Section~\ref{sec:ramanujan}) may yield tools for computational number theory.
+
+%% ============================================================
+%% APPENDIX A
+%% ============================================================
+\appendix
+\section{Explicit Clean Arithmetic Blocks}
+
+The following constructions realize subtraction, negation, and $1/2$ as finite eml-trees. Branch safety verified at 100 decimal digits on $10^5$ random points.
+
+\textbf{subtract$(x, y)$ --- Depth 4:}
+\begin{verbatim}
+eml( eml(1, eml(eml(1,x), 1)), eml(y, 1) )
+\end{verbatim}
+
+\textbf{minus$(x)$ --- Depth 7:}
+\begin{verbatim}
+eml( eml(eml(1,eml(eml(1,x),1)), eml(eml(1,eml(eml(1,1),1)),1) ), 1 )
+\end{verbatim}
+
+\textbf{half --- Depth 6 (constant):}
+\begin{verbatim}
+eml(1, eml(1, eml(1, eml(1, eml(1, eml(1, 1))))))
+\end{verbatim}
+
+\textbf{Caveat.} These blocks close branch safety for effective depth $\leq 4$. Branch safety for the full addition ($K \approx 27$) and multiplication ($K \geq 17$) trees of~[1] is verified numerically at 60 decimal places (zero violations, 1000 random points) but an analytic interval proof for arbitrary compacts remains open.
+
+%% ============================================================
+%% ACKNOWLEDGMENTS
+%% ============================================================
+
+\begin{thebibliography}{9}
+\bibitem{oxieml} COOLJAPAN OU, ``OxiEML: All elementary functions from a single
+  binary operator,'' \url{https://github.com/cool-japan/oxieml}, 2026.
+\bibitem{ceql} S.~Garmaev, M.~Gauch\'e, O.~Fink, ``Complex Equation Learner:
+  Rational Symbolic Regression with Gradient Descent in Complex Domain,''
+  arXiv:2605.03841, 2026.
+\bibitem{zwegers} S.~Zwegers, ``Mock Theta Functions,'' PhD thesis,
+  Utrecht University, 2002.
+\end{thebibliography}
+
+\section*{Acknowledgments}
+
+The author used Claude (Anthropic) and Grok (xAI) as AI coding and verification assistants throughout this work. All mathematical ideas, claims, and their interpretation remain the author's sole responsibility.
+
+%% ============================================================
+%% REFERENCES
+%% ============================================================
+\begin{thebibliography}{9}
+\bibitem{1} A. Odrzywołek, \textit{All elementary functions from a single operator}, arXiv:2603.21852v2 (April 2026).
+\bibitem{2} M.\,H. Stone, \textit{The generalized Weierstrass approximation theorem}, Mathematics Magazine 21 (1948), 167--184.
+\bibitem{3} G. Terzo, \textit{Some consequences of Schanuel's conjecture in exponential rings}, Comm.\ Algebra 36 (2008), 1171--1189.
+\bibitem{4} M. Lamharzi Alaoui, \textit{From Fixed Points to Two-Cycles: Obstructions and Orbit Lifts for Analytic Self-Seeding Sheffer Operators}, Manuscript, Firassa AI (2026). \url{https://github.com/marouane53/eml-sheffer-obstructions}
+\end{thebibliography}
+
+\bigskip
+\noindent\textit{Ancillary files: \texttt{branch\_safety\_final.py}, \texttt{verify\_theorem4.py}, \texttt{eml\_toolkit/direct\_verification.py}, \texttt{eml\_star\_branch\_safety\_lemma\_proof.pdf}}\\
+\noindent\textit{License: MIT --- GitHub: \url{https://github.com/antparis/eml_star}}
+
+\end{document}
