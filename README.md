@@ -92,7 +92,6 @@ Both bases are valid. The choice depends on the intended application.
 | `eml_toolkit/examples_constants.py` | π/3, π/4, √2 via eml★ |
 | `eml_toolkit/test_suite.py` | Complete test suite |
 | `docs/PROJECT_SUMMARY.md` | Full project summary and theorem statuses |
-| `CGIB_v8_corrected.ipynb` | Causal GP experiment — 100 runs, Median ATE 11.71, CI [9.64, 12.57] |
 | `reference/2603_21852v2_Odrzywolek.pdf` | Source paper (Odrzywołek 2026) |
 
 ---
