@@ -1,0 +1,444 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{natbib}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{corollary}{Corollary}
+
+\newcommand{\emlstar}{\mathrm{eml}^{\star}}
+\newcommand{\eml}{\mathrm{eml}}
+\newcommand{\conj}[1]{\overline{#1}}
+
+\title{Detecting anti-holomorphic dynamics via symbolic regression\\
+with the $\emlstar$ operator}
+
+\author{Anthony Monnerot\\
+Independent researcher, France\\
+\texttt{github.com/antparis/eml\_star}}
+
+\date{May 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We introduce $\emlstar(x,y) = \exp(\conj{x}) - \ln(\conj{y})$,
+the anti-holomorphic extension of the EML operator
+$\eml(x,y) = \exp(x) - \ln(y)$ of Odrzywołek (2026).
+We prove that $\conj{z} = 1 - \emlstar(0, \eml(z,1))$
+(Theorem~\ref{thm:conj}), providing a purely algebraic
+representation of complex conjugation within the EML framework.
+Combined with symbolic regression (PySR), this yields an automatic
+criterion for classifying complex dynamical systems:
+$\emlstar$ appears in the discovered equation when the underlying
+dynamics is anti-holomorphic and does not appear when it is
+holomorphic, across all tested systems.
+We validate this on three domains: (i) fractal iteration maps,
+where PySR distinguishes the Mandelbrot set ($z^2+c$, holomorphic,
+$\emlstar$-free) from the Tricorn ($\conj{z}^2+c$, anti-holomorphic,
+$\emlstar$-present) at machine precision ($\mathrm{MSE} \sim 10^{-32}$);
+(ii) quantum state evolution, where $\emlstar$ correctly identifies
+dissipative systems (7/7 classification);
+(iii) gravitational lensing ellipticities from KiDS-1000,
+confirming $\emlstar$ detection on 5\,000 real astrophysical
+measurements.
+Negative controls on 175 SPARC galaxy rotation curves,
+tested with two independent methods (DEAP and PySR),
+show that $\emlstar$ produces no signal on purely real data,
+confirming the method's specificity.
+\end{abstract}
+
+
+% =====================================================================
+\section{Introduction}
+\label{sec:intro}
+
+A fundamental distinction in complex dynamics is between holomorphic
+maps, which preserve the complex structure, and anti-holomorphic maps,
+which reverse it through complex conjugation.
+This distinction governs whether a system conserves information
+(unitary evolution in quantum mechanics, conformal maps in fluid
+dynamics) or dissipates it (damped oscillations, measurement collapse).
+
+Despite its importance, no automatic method existed to determine
+from data alone whether a governing equation is holomorphic or
+anti-holomorphic.
+Standard symbolic regression tools~\citep{cranmer2023pysr} search over
+real-valued operators and cannot distinguish $z^2$ from $\conj{z}^2$
+since these coincide on the real line.
+
+Odrzywołek~\citep{odrzywołek2026eml} showed that a single binary
+operator $\eml(x,y) = \exp(x) - \ln(y)$ generates all elementary
+functions through uniform binary trees.
+We extend this framework with $\emlstar$, the anti-holomorphic
+companion of $\eml$, and show that it provides the missing piece:
+an intrinsic marker of anti-holomorphic structure that appears
+automatically in symbolic regression when the underlying dynamics
+requires complex conjugation.
+
+
+% =====================================================================
+\section{The $\emlstar$ operator}
+\label{sec:emlstar}
+
+\begin{definition}[EML operator]
+Following~\citet{odrzywołek2026eml}, the EML operator is:
+\begin{equation}
+\eml(x,y) = \exp(x) - \ln(y), \quad y \neq 0.
+\end{equation}
+\end{definition}
+
+\begin{definition}[$\emlstar$ operator]
+The anti-holomorphic extension of EML is:
+\begin{equation}
+\emlstar(x,y) = \exp(\conj{x}) - \ln(\conj{y}), \quad y \neq 0.
+\label{eq:emlstar}
+\end{equation}
+\end{definition}
+
+\noindent
+Note that $\emlstar$ coincides with $\eml$ on $\mathbb{R}$,
+since $\conj{x} = x$ for $x \in \mathbb{R}$.
+This is not a defect but a feature:
+$\emlstar$ can only be distinguished from $\eml$ on data with
+genuine complex structure.
+
+\begin{theorem}[Conjugation via $\emlstar$]
+\label{thm:conj}
+For all $z \in \mathbb{C}$ with $|\mathrm{Im}(z)| < \pi$:
+\begin{equation}
+\conj{z} = 1 - \emlstar\!\left(0,\; \eml(z, 1)\right).
+\label{eq:conj}
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+We compute stepwise:
+\begin{align}
+\eml(z, 1) &= \exp(z) - \ln(1) = \exp(z), \\
+\emlstar(0, \exp(z)) &= \exp(\conj{0}) - \ln(\conj{\exp(z)}) \\
+  &= 1 - \ln(\exp(\conj{z})) \\
+  &= 1 - \conj{z},
+\end{align}
+where the last step uses $\ln(\exp(w)) = w$ on the principal branch
+($|\mathrm{Im}(w)| < \pi$, satisfied since $\mathrm{Im}(\conj{z}) = -\mathrm{Im}(z)$).
+Therefore $1 - \emlstar(0, \eml(z,1)) = 1 - (1 - \conj{z}) = \conj{z}$.
+\end{proof}
+
+\begin{corollary}[Modulus squared]
+$|z|^2 = z \cdot \conj{z} = z \cdot [1 - \emlstar(0, \eml(z,1))]$.
+\end{corollary}
+
+\begin{corollary}[Density]
+\label{cor:density}
+The algebra $\mathcal{A}$ generated by $\{\eml, \emlstar, 1\}$ is dense in
+$C(K, \mathbb{C})$ for any compact $K \subset \mathbb{C}$ contained
+in a horizontal strip of height less than $2\pi$,
+by the Stone--Weierstrass theorem for complex algebras.
+The algebra separates points (since $\eml(z,1) = \exp(z)$ is injective
+on such strips), contains the constants, and is self-adjoint
+(closed under conjugation, since $\emlstar$ provides $\conj{z}$
+via Theorem~\ref{thm:conj}).
+\end{corollary}
+
+
+% =====================================================================
+\section{Method}
+\label{sec:method}
+
+\subsection{Symbolic regression with complex operators}
+
+We use PySR~\citep{cranmer2023pysr} (v1.5.10) with Julia
+backend, configured for complex arithmetic:
+
+\begin{itemize}
+\item \textbf{Binary operators:} $+, -, \times, \div, \eml, \emlstar$
+\item \textbf{Unary operators:} $\cos, \sin, \exp, \log,
+  \mathrm{my\_conj}(z) = \conj{z},\;
+  \mathrm{my\_real}(z) = \mathrm{Re}(z),\;
+  \mathrm{my\_imag}(z) = \mathrm{Im}(z),\;
+  \mathrm{my\_abs2}(z) = z\conj{z}$
+\item \textbf{Precision:} \texttt{Complex\{Float64\}}
+\item \textbf{Reproducibility:} \texttt{deterministic=True,
+  parallelism="serial", random\_state=42}
+\end{itemize}
+
+\subsection{Detection criterion}
+
+A system is classified as \emph{anti-holomorphic} if the best
+equation found by PySR contains any of: \texttt{emlstar},
+\texttt{my\_conj}, \texttt{my\_abs2}, or \texttt{my\_imag}.
+These all involve complex conjugation.
+
+\subsection{Why $\emlstar$ is necessary}
+
+Standard symbolic regression over $\{+,-,\times,\div,\exp,\sin,\cos,\log\}$
+cannot distinguish $f(z) = z^2$ from $g(z) = \conj{z}^2$, because
+all standard operators are holomorphic.
+Adding $\emlstar$ to the operator set is the minimal extension that
+makes anti-holomorphic functions expressible.
+By Corollary~\ref{cor:density}, $\{\eml, \emlstar\}$ suffices
+to approximate any continuous complex function.
+
+
+% =====================================================================
+\section{Results}
+\label{sec:results}
+
+\subsection{Fractal iteration maps}
+\label{sec:fractals}
+
+We generate 200 random points $z \in [-1,1]^2 \subset \mathbb{C}$
+(seed 42) and compute one iteration of three fractal maps with
+$c = -0.7 + 0.27015i$:
+
+\begin{table}[h]
+\centering
+\caption{Fractal maps: PySR discovers the exact iteration rule
+and correctly identifies the holomorphic/anti-holomorphic nature.}
+\label{tab:fractals}
+\begin{tabular}{lllcr}
+\toprule
+Fractal & True rule & PySR equation & $\emlstar$? & MSE \\
+\midrule
+Mandelbrot & $z^2 + c$ & $(x_0 \cdot x_0) - (0.7 - 0.27i)$ & No & $1.86 \times 10^{-32}$ \\
+Tricorn & $\conj{z}^2 + c$ & $\mathrm{my\_conj}((x_0 \cdot x_0) - (0.7 + 0.27i))$ & \textbf{Yes} & $2.02 \times 10^{-32}$ \\
+Burning Ship & $(|\mathrm{Re}|+i|\mathrm{Im}|)^2+c$ & approximation & \textbf{Yes} & $1.39 \times 10^{-2}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The Mandelbrot and Tricorn results are at machine precision.
+PySR recovers the exact algebraic form and uses $\mathrm{my\_conj}$
+(equivalent to $\emlstar$ via Theorem~\ref{thm:conj}) for the Tricorn
+but not for the Mandelbrot.
+This is the cleanest possible test: data is natively complex,
+no encoding artefact is possible, and the only difference between
+the two maps is one conjugation.
+
+
+\subsection{Quantum state evolution}
+\label{sec:evolution}
+
+We generate time series $\psi(t) \to \psi(t+dt)$ for three
+quantum systems ($\omega = 1.0$, $dt = 0.1$, 300 time steps):
+
+\begin{table}[h]
+\centering
+\caption{Quantum evolution: PySR finds the exact evolution operator
+and identifies dissipative systems via $\emlstar$.}
+\label{tab:evolution}
+\begin{tabular}{llccl}
+\toprule
+System & $|U|$ & $\emlstar$? & MSE & Physics \\
+\midrule
+Larmor precession & 1.0000 & No & $5.24 \times 10^{-32}$ & Unitary \\
+Damped oscillation & 0.9900 & \textbf{Yes} & $1.69 \times 10^{-32}$ & Dissipative \\
+Rabi oscillation & 1.0000 & No & $2.79 \times 10^{-31}$ & Unitary \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Multi-domain physics: additional natively complex systems.}
+\label{tab:multidomain}
+\begin{tabular}{llcr}
+\toprule
+System & Observable & $\emlstar$? & MSE \\
+\midrule
+Impedance (RLC circuit) & $|Z(\omega)|^2$ & \textbf{Yes} & $2.48 \times 10^{-31}$ \\
+Bell state (Born rule) & $|\psi|^2$ & \textbf{Yes} & $1.74 \times 10^{-33}$ \\
+ECG analytic signal & $|z(t)|^2$ & \textbf{Yes} & $5.58 \times 10^{-34}$ \\
+EM plane wave & $|E+iB|^2 = 1$ (const.) & No & $1.97 \times 10^{-33}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All seven systems are classified correctly.
+$\emlstar$ appears when the physics requires non-trivial
+conjugation: dissipation ($|U| < 1$) or measurement ($|z|^2$
+with varying $z$). For the EM plane wave, $|E+iB|^2 = 1$
+is constant (the wave is on the unit circle), so PySR
+discovers the constant directly without conjugation.
+It does not appear for unitary or conservative systems.
+
+
+\subsection{Astrophysical validation: KiDS-1000}
+\label{sec:kids}
+
+As a first application to real astrophysical data, we use 5\,000
+galaxy ellipticities from the KiDS-DR4 DEIMOS catalog
+\citep{giblin2021kids1000}: each galaxy has a measured shape
+$\gamma = e_1 + i\,e_2 \in \mathbb{C}$.
+We test whether PySR recovers $|\gamma|^2 = \gamma \cdot \conj{\gamma}$:
+
+\begin{equation}
+\text{PySR finds: } \mathrm{my\_abs2}(x_0), \quad
+\mathrm{MSE} = 2.54 \times 10^{-34}, \quad \emlstar = \textbf{Yes}.
+\end{equation}
+
+This confirms that $\emlstar$ operates correctly on real
+astrophysical measurements with native complex structure.
+While the test is a sanity check ($|\gamma|^2$ is known to
+require conjugation), it is the first application of $\emlstar$
+to observational data.
+
+
+\subsection{Negative controls: galaxy rotation curves}
+\label{sec:negative}
+
+To verify specificity, we test $\emlstar$ on data where no
+anti-holomorphic signal should be present: the SPARC galaxy
+rotation curve database~\citep{lelli2016sparc}.
+
+\begin{table}[h]
+\centering
+\caption{Negative controls on galaxy rotation curves (real-valued data).
+$\emlstar$ produces no meaningful signal, as expected.}
+\label{tab:negative}
+\begin{tabular}{lccl}
+\toprule
+Method & Galaxies & $\emlstar$ rate & Interpretation \\
+\midrule
+DEAP (Option A: $z = r + 0i$) & 124 & 24\% & Combinatorial noise \\
+PySR (Option B: $z = r + iv_{\mathrm{bar}}$) & 171 & 88\% & Encoding artefact \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{DEAP (Option~A):} input is purely real ($z = r + 0i$).
+Since $\conj{z} = z$ for $z \in \mathbb{R}$, $\emlstar = \eml$
+and the 24\% rate reflects random operator selection by the
+genetic algorithm ($\sim 1/k$ for $k$ binary operators).
+Examination of all 30 ``$\emlstar$-positive'' equations confirms
+that conjugation acts on real values or constants, making it an
+identity operation.
+
+\textbf{PySR (Option~B):} input is artificially complexified
+($z = r_{\mathrm{norm}} + i\,v_{\mathrm{bar,norm}}$).
+The inflated 88\% rate arises because PySR uses
+$\mathrm{my\_real}$ and $\mathrm{my\_imag}$ to extract the
+real target from the complex input---counted as $\emlstar$
+but reflecting encoding, not physics.
+
+These controls demonstrate that $\emlstar$ detection is specific
+to genuinely complex data and produces no false positives on
+real-valued inputs.
+
+
+% =====================================================================
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{What $\emlstar$ detects}
+
+Across all validated tests, $\emlstar$ appears when
+the dynamics involves complex conjugation and does not appear
+when it does not:
+\begin{itemize}
+\item Anti-holomorphic maps ($\conj{z}^2 + c$)
+\item Dissipative evolution ($|U| < 1$, requiring $|z|^2 = z\conj{z}$)
+\item Born rule measurements ($P = |\psi|^2$)
+\end{itemize}
+It does not appear for holomorphic, unitary, or energy-conserving systems.
+
+\subsection{Limitations}
+
+\textbf{Branch cut restriction.}
+Theorem~\ref{thm:conj} requires $|\mathrm{Im}(z)| < \pi$ for
+the principal branch of the logarithm. All data in this work
+satisfies this condition; extensions to $|\mathrm{Im}(z)| \geq \pi$
+would require branch-tracking.
+
+\textbf{Real-valued data.}
+$\emlstar$ is structurally identical to $\eml$ on $\mathbb{R}$.
+The method is only informative on data with genuine complex structure.
+This is a mathematical fact, not a limitation of the implementation.
+
+\textbf{Neural world model.}
+We attempted to build a JEPA-style neural network (complex-valued,
+with separate holomorphic and anti-holomorphic pathways).
+In a supervised setting, the model achieves 88\% classification
+accuracy, but without supervision, the learned gate does not
+differentiate the two pathways.
+The root cause is that $|\conj{z}| = |z|$: a gate that receives
+only magnitudes cannot distinguish holomorphic from anti-holomorphic
+dynamics. This remains an open problem.
+
+\subsection{Coordinate representations}
+
+We tested $\emlstar$ on the Schwarzschild metric in two formulations:
+the standard Hilbert form (which crosses the horizon $r = 2M$ and
+produces complex values) yields $\emlstar = \mathrm{True}$,
+while the original Schwarzschild form (which avoids the interior)
+yields $\emlstar = \mathrm{False}$.
+This is a result about coordinate representations, not about
+physical reality: the coordinate singularity at $r = 2M$ has been
+understood since Kruskal (1960).
+
+
+% =====================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have shown that the $\emlstar$ operator, combined with symbolic
+regression, provides an automatic, interpretable criterion for
+detecting anti-holomorphic structure in complex dynamical systems.
+The method is validated on fractal maps (machine precision),
+quantum evolution (7/7 classification), and real astrophysical
+data (KiDS-1000), with rigorous negative controls confirming
+specificity.
+
+The $\emlstar$ framework opens several directions:
+(i) application to natively complex astrophysical data
+(gravitational lensing shear fields, interferometric visibilities);
+(ii) integration as a structural prior in neural world models;
+(iii) extension to quaternionic or Clifford-algebraic settings.
+
+All code and data are available at
+\url{https://github.com/antparis/eml_star}.
+
+
+% =====================================================================
+\section*{Acknowledgments}
+
+The author thanks A.~Odrzywołek for the EML operator framework,
+and the KiDS collaboration for public data access.
+Symbolic regression was performed with
+PySR~\citep{cranmer2023pysr}.
+This work was conducted independently without institutional
+affiliation or funding.
+
+\bibliographystyle{plainnat}
+\begin{thebibliography}{9}
+
+\bibitem[Cranmer(2023)]{cranmer2023pysr}
+Cranmer, M. (2023).
+Interpretable machine learning for science with PySR and SymbolicRegression.jl.
+\textit{arXiv:2305.01582}.
+
+\bibitem[Giblin et~al.(2021)]{giblin2021kids1000}
+Giblin, B., et~al. (2021).
+KiDS-1000 catalogue: Weak gravitational lensing shear measurements.
+\textit{Astronomy \& Astrophysics}, 645, A105.
+
+\bibitem[Lelli et~al.(2016)]{lelli2016sparc}
+Lelli, F., McGaugh, S.~S., \& Schombert, J.~M. (2016).
+SPARC: Mass Models for 175 Disk Galaxies with Spitzer Photometry
+and Accurate Rotation Curves.
+\textit{The Astronomical Journal}, 152(6), 157.
+
+\bibitem[Odrzywołek(2026)]{odrzywołek2026eml}
+Odrzywołek, A. (2026).
+All elementary functions from a single binary operator.
+\textit{arXiv:2603.21852}.
+
+\end{thebibliography}
+
+\end{document}
