@@ -146,6 +146,108 @@ on such strips), contains the constants, and is self-adjoint
 via Theorem~\ref{thm:conj}).
 \end{corollary}
 
+% =====================================================================
+\section{A Re-based decomposition of $\emlstar$}
+\label{sec:re-decomposition}
+
+The $\emlstar$ operator was introduced in Section~\ref{sec:emlstar}
+as the natural anti-holomorphic companion of $\eml$.
+A symbolic regression experiment using PySR was run with $z$ and $w$
+as independent complex inputs sampled from the square
+$\{|\mathrm{Re}|, |\mathrm{Im}| \leq \pi - 0.05\}$ with $|w| \geq 0.1$,
+and the toolbox restricted to
+$\{+, -, \times, /, \sin, \cos, \exp, \log,
+  \mathrm{my\_real}, \mathrm{my\_imag}\}$
+(no \texttt{my\_conj}, no $\eml$, no $\emlstar$).
+On 2\,000 training points, PySR rediscovered the following
+identity at $\mathrm{MSE} = 4.22 \times 10^{-31}$
+(machine precision for complex128):
+
+\begin{equation}
+\boxed{\,\emlstar(z, w) = \mathrm{Re}\!\left(2\exp(z) - \ln(w^2)\right)
++ \ln(w) - \exp(z)\,}
+\label{eq:re-decomp}
+\end{equation}
+
+An independent verification on $N = 10\,000$ points
+(different seed) confirmed $\mathrm{MSE} = 3.17 \times 10^{-31}$
+and maximum absolute error $7.11 \times 10^{-15}$.
+
+\paragraph{Algebraic proof.}
+For any $u \in \mathbb{C}$, the elementary identity
+$\conj{u} = 2\,\mathrm{Re}(u) - u$ holds.
+Applying it to $u = \exp(z)$ and using
+$\conj{\exp(z)} = \exp(\conj{z})$ yields
+
+\begin{equation}
+\exp(\conj{z}) = 2\,\mathrm{Re}(\exp(z)) - \exp(z).
+\tag{Lemma A}
+\label{eq:lemma-A}
+\end{equation}
+
+Applying it to $u = \ln(w)$, and using
+$\conj{\ln(w)} = \ln(\conj{w})$ on the principal branch
+($\arg(w) \in (-\pi, \pi)$), yields
+
+\begin{equation}
+\ln(\conj{w}) = 2\,\mathrm{Re}(\ln(w)) - \ln(w).
+\tag{Lemma B}
+\label{eq:lemma-B}
+\end{equation}
+
+Substituting Lemma A and Lemma B into the definition
+$\emlstar(z, w) = \exp(\conj{z}) - \ln(\conj{w})$
+gives equation~\eqref{eq:re-decomp}. $\square$
+
+\paragraph{Structural consequence.}
+Equation~\eqref{eq:re-decomp} expresses $\emlstar$ using only
+$\mathrm{Re}$, $\exp$, $\ln$, and arithmetic operations.
+Since $\{\eml, 1\}$ generates $\exp$ and $\ln$
+(Odrzywołek, 2026), it follows that
+$\{\eml, \mathrm{Re}, 1\}$ generates $\emlstar$.
+Combined with the reverse direction
+($\mathrm{Re}$ is recoverable from $\{\eml, \emlstar, 1\}$
+via $\mathrm{Re}(z) = (z + \conj{z})/2$ and Theorem~\ref{thm:conj}),
+we obtain:
+
+\begin{theorem}[Equivalence of minimal non-holomorphic extensions]
+\label{thm:equivalence}
+The operator sets $\{\eml, \emlstar, 1\}$ and
+$\{\eml, \mathrm{Re}, 1\}$ have identical expressive power
+over $C(K, \mathbb{C})$ for every compact
+$K \subset \mathbb{C}$ contained in a horizontal strip
+of height less than $2\pi$ and disjoint from $\{w = 0\}$.
+\end{theorem}
+
+\begin{corollary}[Generalized completeness]
+\label{cor:generalized}
+Let $\phi$ be any non-holomorphic primitive in
+$\{\mathrm{Re}, \mathrm{Im}, \conj{\cdot}, \emlstar\}$.
+The set $\{\eml, \phi, 1\}$ is dense in $C(K, \mathbb{C})$
+for every compact $K$ satisfying the branch condition above.
+\end{corollary}
+
+\paragraph{Discussion.}
+Theorem~\ref{thm:equivalence} relativizes the apparent uniqueness
+of $\emlstar$ as the natural anti-holomorphic extension of $\eml$.
+Any single non-holomorphic primitive added to $\{\eml, 1\}$
+achieves $C(K, \mathbb{C})$-density.
+The $\emlstar$ formulation retains structural appeal
+(it preserves the binary, exp-minus-log signature of $\eml$),
+while the $\mathrm{Re}$ formulation is more minimal in the
+standard analytic toolkit.
+
+The empirical rediscovery of equation~\eqref{eq:re-decomp}
+by an unconstrained symbolic regression search demonstrates
+that the $\mathrm{Re}$-based decomposition is not merely
+formally valid but \emph{algorithmically accessible}:
+a generic evolutionary search over elementary operators
+converges to it within minutes when given enough expressive flexibility.
+Implementation and reproducibility scripts are available at
+\url{https://github.com/antparis/oxieml-star}
+(commit \texttt{7610805}).
+
+
 
 % =====================================================================
 \section{Method}
@@ -330,6 +432,85 @@ but reflecting encoding, not physics.
 These controls demonstrate that $\emlstar$ detection is specific
 to genuinely complex data and produces no false positives on
 real-valued inputs.
+
+% =====================================================================
+\section{Negative control: weak gravitational shear profile}
+\label{sec:lensing-control}
+
+The previous tests show $\emlstar$ appearing on systems where
+anti-holomorphic structure is expected from theory.
+A stronger test of specificity is to apply the same machinery to
+data where anti-holomorphic structure is \emph{not} expected and
+verify that $\emlstar$ does not appear.
+
+We use the KiDS-1000 SOM-gold catalog~\citep{Giblin2021}, comprising
+21\,262\,011 source galaxies with reliable shape and photometric
+redshift measurements over 1006 deg$^2$, and the 268 high-quality
+strong-lens candidates of~\citet{Petrillo2019, Li2020, Li2021}.
+After standard selection cuts
+($\mathtt{fitclass}=0$, $\mathtt{MASK}=0$, $\mathtt{weight}>0$,
+$\mathtt{Z\_B}>0.3$) we retain 17\,450\,042 sources.
+Pairing every source within $10$ arcmin of each lens yields
+293\,880 (lens, source) pairs spread across 181/268 lenses
+with at least one matched source.
+
+For each pair, we compute the lens--source angular separation
+$\Delta z = (\mathrm{RA}_s - \mathrm{RA}_\ell) + i(\mathrm{Dec}_s - \mathrm{Dec}_\ell)$
+and the rotated source ellipticity
+$\gamma_\mathrm{rot} = \gamma \exp(-2i\varphi)$,
+where $\gamma = e_1 + ie_2$ and $\varphi = \arg(\Delta z)$.
+We stack pairs in 20 logarithmic bins of $r = |\Delta z|$
+between 0.5 and 10 arcmin, using \texttt{lensfit} inverse-variance
+weights:
+\begin{equation}
+\langle\gamma_\mathrm{rot}\rangle(r)
+\;=\;
+\frac{\sum_k w_k\,\gamma_{\mathrm{rot},k}}{\sum_k w_k}.
+\label{eq:stacking}
+\end{equation}
+All 20 bins have effective stacking weight $N_\mathrm{eff} > 100$
+and are retained.
+
+\paragraph{Anti-circularity.}
+The rotation factor $\exp(-2i\varphi) = (\overline{\Delta z}/|\Delta z|)^2$
+contains an implicit conjugation.
+If $\Delta z$ or $\varphi$ were passed to PySR, the system could
+trivially reconstruct $\gamma_\mathrm{rot}$ via complex conjugation,
+giving a circular result.
+To prevent this, PySR receives only $r = |\Delta z|$ as a single
+real-valued input (cast to \texttt{complex128} with zero imaginary
+part), with $\langle\gamma_\mathrm{rot}\rangle(r)$ as the complex
+target.
+This is verified in code by asserting $\mathrm{Im}(X) = 0$ before
+fitting.
+
+\paragraph{Result.}
+PySR with the full $\emlstar$-enabled toolbox is run on the 20-bin
+stacked profile.
+The Pareto front shows a clear holomorphic plateau at low complexity:
+the formula $(c_1 + ic_2) / (x_0 + c_3)$ at complexity 5 reaches
+$\mathrm{MSE} = 5.7 \times 10^{-5}$, a factor 2.4 improvement over
+the constant baseline.
+This is the expected $1/r$ shear scaling from standard general
+relativity.
+Complexity-11 reaches $\mathrm{MSE} = 3.9 \times 10^{-5}$ with a
+purely holomorphic formula and \emph{beats} the only
+anti-holomorphic candidate at complexity 10
+(MSE $4.5 \times 10^{-5}$, score 0.16).
+The $\emlstar$ operator does appear at complexity $\geq 14$, but
+with a marginal score per added node ($\lesssim 0.03$) and within
+the regime where PySR can interpolate noise on 20 binned points.
+
+\paragraph{Interpretation.}
+This is the contrapositive of the positive tests of
+Section~\ref{sec:results}.
+On a real astrophysical signal that is well described by
+holomorphic general relativity, $\emlstar$ is \emph{not} structurally
+required: PySR prefers simpler holomorphic formulas at low complexity
+and only resorts to $\emlstar$ for cosmetic high-complexity fits.
+This is the behavior expected of a specific anti-holomorphic
+detector, not a free-floating fit parameter.
+
 
 
 % =====================================================================
