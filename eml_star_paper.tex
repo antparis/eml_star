@@ -47,10 +47,10 @@ dissipative systems (7/7 classification);
 (iii) gravitational lensing ellipticities from KiDS-1000,
 confirming $\emlstar$ detection on 5\,000 real astrophysical
 measurements.
-Negative controls on 175 SPARC galaxy rotation curves,
-tested with two independent methods (DEAP and PySR),
-show that $\emlstar$ produces no signal on purely real data,
-confirming the method's specificity.
+A negative control on the weak gravitational shear profile around
+KiDS-1000 lenses (268\,722 source-lens pairs) shows that $\emlstar$
+does not appear at low complexity when the underlying physics is
+holomorphic (standard general relativity), confirming specificity.
 \end{abstract}
 
 
@@ -245,7 +245,7 @@ a generic evolutionary search over elementary operators
 converges to it within minutes when given enough expressive flexibility.
 Implementation and reproducibility scripts are available at
 \url{https://github.com/antparis/oxieml-star}
-(commit \texttt{7610805}).
+(commit \texttt{f03a46e}).
 
 
 
@@ -392,47 +392,6 @@ require conjugation), it is the first application of $\emlstar$
 to observational data.
 
 
-\subsection{Negative controls: galaxy rotation curves}
-\label{sec:negative}
-
-To verify specificity, we test $\emlstar$ on data where no
-anti-holomorphic signal should be present: the SPARC galaxy
-rotation curve database~\citep{lelli2016sparc}.
-
-\begin{table}[h]
-\centering
-\caption{Negative controls on galaxy rotation curves (real-valued data).
-$\emlstar$ produces no meaningful signal, as expected.}
-\label{tab:negative}
-\begin{tabular}{lccl}
-\toprule
-Method & Galaxies & $\emlstar$ rate & Interpretation \\
-\midrule
-DEAP (Option A: $z = r + 0i$) & 124 & 24\% & Combinatorial noise \\
-PySR (Option B: $z = r + iv_{\mathrm{bar}}$) & 171 & 88\% & Encoding artefact \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\textbf{DEAP (Option~A):} input is purely real ($z = r + 0i$).
-Since $\conj{z} = z$ for $z \in \mathbb{R}$, $\emlstar = \eml$
-and the 24\% rate reflects random operator selection by the
-genetic algorithm ($\sim 1/k$ for $k$ binary operators).
-Examination of all 30 ``$\emlstar$-positive'' equations confirms
-that conjugation acts on real values or constants, making it an
-identity operation.
-
-\textbf{PySR (Option~B):} input is artificially complexified
-($z = r_{\mathrm{norm}} + i\,v_{\mathrm{bar,norm}}$).
-The inflated 88\% rate arises because PySR uses
-$\mathrm{my\_real}$ and $\mathrm{my\_imag}$ to extract the
-real target from the complex input---counted as $\emlstar$
-but reflecting encoding, not physics.
-
-These controls demonstrate that $\emlstar$ detection is specific
-to genuinely complex data and produces no false positives on
-real-valued inputs.
-
 % =====================================================================
 \section{Negative control: weak gravitational shear profile}
 \label{sec:lensing-control}
@@ -443,16 +402,16 @@ A stronger test of specificity is to apply the same machinery to
 data where anti-holomorphic structure is \emph{not} expected and
 verify that $\emlstar$ does not appear.
 
-We use the KiDS-1000 SOM-gold catalog~\citep{Giblin2021}, comprising
+We use the KiDS-1000 SOM-gold catalog~\citep{giblin2021kids1000}, comprising
 21\,262\,011 source galaxies with reliable shape and photometric
 redshift measurements over 1006 deg$^2$, and the 268 high-quality
-strong-lens candidates of~\citet{Petrillo2019, Li2020, Li2021}.
+strong-lens candidates of~\citet{petrillo2019linKS, li2020kids, li2021kids}.
 After standard selection cuts
 ($\mathtt{fitclass}=0$, $\mathtt{MASK}=0$, $\mathtt{weight}>0$,
 $\mathtt{Z\_B}>0.3$) we retain 17\,450\,042 sources.
 Pairing every source within $10$ arcmin of each lens yields
 293\,880 (lens, source) pairs spread across 181/268 lenses
-with at least one matched source.
+with at least one matched source. Of these, 268\,722 pairs fall within the analysis range $r \in [0.5, 10]$ arcmin used for stacking.
 
 For each pair, we compute the lens--source angular separation
 $\Delta z = (\mathrm{RA}_s - \mathrm{RA}_\ell) + i(\mathrm{Dec}_s - \mathrm{Dec}_\ell)$
@@ -609,11 +568,22 @@ Giblin, B., et~al. (2021).
 KiDS-1000 catalogue: Weak gravitational lensing shear measurements.
 \textit{Astronomy \& Astrophysics}, 645, A105.
 
-\bibitem[Lelli et~al.(2016)]{lelli2016sparc}
-Lelli, F., McGaugh, S.~S., \& Schombert, J.~M. (2016).
-SPARC: Mass Models for 175 Disk Galaxies with Spitzer Photometry
-and Accurate Rotation Curves.
-\textit{The Astronomical Journal}, 152(6), 157.
+
+\bibitem[Petrillo et~al.(2019)]{petrillo2019linKS}
+Petrillo, C.~E., et~al. (2019).
+LinKS: discovering galaxy-scale strong lenses in the Kilo-Degree Survey
+using convolutional neural networks.
+\textit{Monthly Notices of the Royal Astronomical Society}, 484(3), 3879--3896.
+
+\bibitem[Li et~al.(2020)]{li2020kids}
+Li, R., Napolitano, N.~R., Tortora, C., et~al. (2020).
+New high-quality strong lens candidates with deep learning in the Kilo-Degree Survey.
+\textit{The Astrophysical Journal}, 899(1), 30.
+
+\bibitem[Li et~al.(2021)]{li2021kids}
+Li, R., Napolitano, N.~R., Spiniello, C., et~al. (2021).
+High-quality strong lens candidates in the final Kilo-Degree Survey footprint.
+\textit{The Astrophysical Journal}, 923(1), 16.
 
 \bibitem[Odrzywołek(2026)]{odrzywołek2026eml}
 Odrzywołek, A. (2026).
