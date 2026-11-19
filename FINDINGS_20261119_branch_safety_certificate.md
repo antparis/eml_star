@@ -98,22 +98,45 @@ racine, log d'un rectangle contenant 0, valeur qui saute utilisée sous un log).
 
 ## 8. Axe orthogonal (même jour) : ce que toutes nos analyses gardaient fixe
 
-Mesuré (sortie dans `CONSOLE_20261119_axe_orthogonal.txt`) :
-- **Porte « partie réelle ».** Le saut 2πi est purement imaginaire : autour de x = 0,7, ln(ln x) saute de 2πi, sa partie
-  réelle de 0, et u + conj(u) de 0. Prendre Re (ou u + ū) efface donc le saut, comme l'exponentielle. La partie imaginaire,
-  elle, garde le saut (2π) ; la conjugaison seule le retourne (+2πi → −2πi) sans l'effacer.
-- **Le trou autour de 0 disparaît pour l'addition.** Avec le lemme A (cas w = 0 compris), E_add(x, y) = x − Log(exp(−y)) :
-  certifié sur le carré PLEIN [−3, 3] + i[−3, 3] pour x et y, zéro compris (256 rectangles).
-- **Témoin indépendant de la logique d'intervalles.** 18 000 valeurs calculées au log principal ordinaire, serrées contre
-  le segment (0, 1) et l'axe négatif (jusqu'à 10⁻³⁰) : pire écart avec x·y et x + y = 1,1·10⁻⁴⁹.
+`axe_orthogonal.py` est le script de REPRODUCTION de ce paragraphe (remis en fichier le soir même : la trace d'origine
+venait des mêmes lignes tapées sans fichier). Il affiche ses résultats sans contrôler de verdict : son code de sortie
+ne signale pas un échec. La commande qui contrôle les six verdicts et sort en erreur en cas d'échec reste
+`python certify_branch_safety.py`. Sorties : `CONSOLE_20261119_axe_orthogonal.txt` (origine, avec la durée) et
+`CONSOLE_20261119_axe_orthogonal_rejeu.txt` (rejeu ; mêmes résultats affichés). Portée précisée après relecture : ce
+que le script OBSERVE et ce qui est DÉMONTRÉ sont séparés.
 
-Hypothèses ouvertes (non testées) :
-- Porte « infini » : avec des intervalles à bornes infinies, la multiplication serait certifiable en x = 0 et y = 0
-  (ln 0 = −∞ … exp(−∞) = 0 = x·y), ce qui fermerait le dernier trou.
-- Invariance de branche : un arbre qui respecte la règle des portes calcule la même fonction quel que soit l'endroit où
-  l'on place la coupure des logs en porte x.
-- Vérification par un outil vraiment indépendant (Julia IntervalArithmetic ou PARI, installés) : les deux exécutions du
-  19 novembre utilisent le même programme sur la même machine, ce n'est pas deux avis.
+- **Partie réelle et saut de 2πi.**
+  *Démontré (une ligne, sans le script)* : si les deux limites latérales de la valeur d'un nœud diffèrent de 2πi·k,
+  k entier, leurs parties réelles sont égales, car 2πi·k est imaginaire pur ; de même pour u + conj(u) = 2 Re u. Les
+  parties imaginaires diffèrent de 2πk ; la conjugaison change l'écart en −2πi·k sans l'effacer.
+  *Observé par le script, en UN seul couple de points* (x = 0,7 ± 10⁻¹² i, nœud ln(ln x)) : différence des deux valeurs
+  proche de 2πi (affichée `6.2831853j`), différence des parties réelles affichée 0, de u + ū affichée 0, des parties
+  imaginaires 6,2831853. Le saut exact de 2πi est celui des limites latérales ; deux points à distance 10⁻¹² n'en
+  donnent qu'une valeur approchée. C'est une illustration, pas une vérification sur un domaine. Remarque : Re n'est
+  pas un opérateur de la grammaire {eml, eml★, 1} ; cette « porte » concerne la base alternative {eml, Re, 1} ou une
+  partie réelle prise à l'extérieur de l'arbre.
+- **Addition jusqu'à zéro : seulement pour la FORME RÉCRITE par le lemme.** Notons P = [−3, 3] + i[−3, 3] et K = P privé
+  du petit carré ouvert |Re|, |Im| < 0,1.
+  Cas 6 des certificats : la forme récrite x − Log(exp(E_neg(y))) est certifiée sur P × P, zéro compris (256 rectangles).
+  Cas 4 : l'arbre d'origine E_add est certifié sur K × K (le petit carré est retiré de chacun des deux domaines, celui
+  de x et celui de y).
+  Le lien entre les deux formes est le lemme d'absorption, eml(E_ln(x), c) = x − Log c, y compris en x = 0 avec
+  l'évaluation étendue : il repose sur la preuve, pas sur le programme.
+- **Échantillon de points** (indépendant de la logique d'intervalles, même bibliothèque mpmath) : 6 000 couples (x, y),
+  trois comparaisons par couple (E_mul et sa forme récrite contre x·y, E_add contre x + y), soit 18 000 écarts absolus,
+  au log principal ordinaire. x est collé au segment (0, 1) ou à l'axe négatif (jusqu'à 10⁻³⁰), ou pris dans
+  [−3, 3] + i([−3, −0,1] ∪ [0,1 ; 3]) ; y vérifie |Re y| ∈ [0,1 ; 3] et Im y ∈ [−1, 1]. Maximum affiché sur cet
+  échantillon : 1,09·10⁻⁴⁹. Un échantillon ne prouve rien hors des points tirés.
+
+Pistes notées à cette date, avec ce qu'elles sont devenues :
+- Multiplication en zéro (« porte de l'infini »). Le produit admet un prolongement continu de valeur zéro. Mais
+  évaluer l'arbre brut en x = 0 demanderait une convention supplémentaire ou une réécriture justifiée : E_ln(0) = −∞,
+  puis le sous-arbre E_ln(E_ln(0)) demande log(−∞), indéfini selon la convention retenue ; élargir les bornes des
+  intervalles ne résout pas cette opération.
+- Invariance de branche : démontrée pour des décalages simultanés arbitraires des huit logarithmes à argument
+  variable de l'arbre ×, les logarithmes constants gardant leur convention (§12, §13). Certains logarithmes constants
+  peuvent aussi être décalés isolément sans effet (le n° 6, §15) ; le n° 19 ne le peut pas.
+- Vérification par un outil indépendant : faite au §9, en Julia.
 
 ## 9. Deuxième avis : le même certificat récrit en Julia (`julia_check/certify.jl`, sortie `julia_check/sortie_julia.txt`)
 
