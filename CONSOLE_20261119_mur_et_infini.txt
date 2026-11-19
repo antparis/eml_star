@@ -1,0 +1,11 @@
+1) mutant de branche, 4000 points, |Im| jusqu'à 12 :
+   × : pire écart relatif avec x·y = 5.55e-79
+   + : (résultat − (x+y)) / 2πi est toujours un entier (écart 1.87e-79) ; entiers vus : -5 … 5
+2) log principal, 4000 points, |Im| jusqu'à 40 (3722 avec |Im y| > π) :
+   × : pire écart relatif avec x·y = 1.59e-80
+   + : pire écart avec x + enroule(y) = 4.1e-79
+   exemple : E_add(1, 5i) = (1.0 - 1.28318530718j)  ; 1 + (5 − 2π)i = (1.0 - 1.28318530718j)
+3) vers zéro (log principal) :
+   |x| = 1e-5 : |E_mul(x, y)| = 1.36e-5, écart relatif avec x·y = 3.44e-80 ; |E_mul(y, x)| = 1.36e-5
+   |x| = 1e-20 : |E_mul(x, y)| = 1.36e-20, écart relatif avec x·y = 6.31e-80 ; |E_mul(y, x)| = 1.36e-20
+   |x| = 1e-60 : |E_mul(x, y)| = 1.36e-60, écart relatif avec x·y = 3.38e-79 ; |E_mul(y, x)| = 1.36e-60

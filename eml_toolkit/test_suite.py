@@ -23,33 +23,16 @@ TOL = mpmath.mpf("1e-45")
 EULER_GAMMA = mpmath.euler
 GLAISHER = mpmath.mpf("1.28242712910062263687534256886979172776768892732500119")
 
-try:
-    from eml_toolkit.core import (
-        eml, eml_star, eml_exp, eml_ln, eml_zero, eml_neg,
-        eml_sub, eml_add, eml_inv, eml_mul,
-        conjugate_formula, real_part, imag_part,
-        modulus_squared, modulus, alt_conjugate, alt_modulus_squared,
-    )
-except ImportError:
-    # Inline fallback
-    ONE = mpmath.mpc(1)
-    def eml(x, y):      return mpmath.exp(x) - mpmath.log(y)
-    def eml_star(x, y): return mpmath.exp(x) - mpmath.log(mpmath.conj(y))
-    def eml_exp(z):     return eml(z, ONE)
-    def eml_ln(z):      return eml(ONE, eml(eml(ONE, z), ONE))
-    def eml_zero():     return eml(ONE, eml(eml(ONE, ONE), ONE))
-    def eml_neg(z):     return eml(eml(ONE, eml(eml(ONE, eml_zero()), ONE)), eml(z, ONE))
-    def eml_sub(a, b):  return eml(eml_ln(a), eml_exp(b))
-    def eml_add(a, b):  return eml_sub(a, eml_neg(b))
-    def eml_inv(z):     return eml_exp(eml_neg(eml_ln(z)))
-    def eml_mul(a, b):  return eml_exp(eml_add(eml_ln(a), eml_ln(b)))
-    def conjugate_formula(z): return 1 - eml_star(mpmath.mpc(0), eml(z, ONE))
-    def real_part(z):   return (z + conjugate_formula(z)) / 2
-    def imag_part(z):   return (z - conjugate_formula(z)) / (2 * mpmath.j)
-    def modulus_squared(z): return z * conjugate_formula(z)
-    def modulus(z):     return mpmath.sqrt(modulus_squared(z))
-    def alt_conjugate(z):    return 2 * mpmath.re(z) - z
-    def alt_modulus_squared(z): return mpmath.re(z)**2 + mpmath.im(z)**2
+# Import direct, sans définitions de secours : si core.py n'a pas ces noms, la suite doit échouer bruyamment.
+# (Jusqu'au 2026-11-19, un import raté basculait en silence sur des copies locales : core.py n'était pas testé.)
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # pour « python eml_toolkit/test_suite.py »
+from eml_toolkit.core import (
+    eml, eml_star, eml_exp, eml_ln, eml_zero, eml_neg,
+    eml_sub, eml_add, eml_inv, eml_mul,
+    conjugate_formula, real_part, imag_part,
+    modulus_squared, modulus, alt_conjugate, alt_modulus_squared,
+)
 
 
 # ── Test infrastructure ────────────────────────────────────────────────────────

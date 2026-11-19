@@ -247,3 +247,35 @@ qu'écrit, avec son erreur, pour l'historique.
 3. Ligne du README alignée : « A_K is uniformly dense » ; ce qui est retiré est l'affirmation « sans traversée ».
 
 Avis de ChatGPT après ces retouches : favorable au commit documentaire local ; la revue de core.py et des scripts reste distincte.
+
+## 15. Relecture du code (auto-relecture puis ChatGPT) : défauts corrigés avant le second commit
+
+Aucun de ces défauts ne change un verdict. Les deux implémentations annoncent le succès sur les six domaines testés.
+Leurs compteurs concordent dans les cas 1, 2, 4 et 6. Les cas 3 et 5 aboutissent au même verdict avec des découpages
+différents (cas 3 : 1 rectangle en Python, 16 en Julia ; cas 5 : 16 rectangles et 24 traversées comptées en Python,
+256 et 400 en Julia).
+
+1. **Mutant, log n° 6 classé « indéfini » à tort** (le script renvoyait `None` sans calculer). Calcul exact : décaler le
+   ln 1 le plus profond de E_zero donne e − 2πi, puis exp(e − 2πi) = exp(e), et E_zero reste 0 : aucun effet. Le n° 7
+   (ln 1 du milieu de E_zero) donne un résultat faux. Classement corrigé des 20 logarithmes : 8 à argument variable sans
+   effet ; constants 8, 9, 11 sans effet ; feuille 1 : n° 6 et 10 sans effet, n° 19 décale de −2πi, n° 1, 4, 7, 13, 15, 17
+   faussent le résultat. Régressions : `test_branches_autorisees.py`.
+2. **Bord du miroir.** Valeur exacte de la formule : Log(exp(z̄)), donc ½ + iπ pour z = ½ + iπ ET pour z = ½ − iπ.
+   L'arbre brut en flottant rend ½ − iπ au bord supérieur : sur le bord, exp(z) est à un cheveu de l'axe négatif et le
+   log choisit un côté au hasard de l'arrondi. `core.py` : `conjugate_formula` reste l'arbre brut (documenté comme non
+   fiable SUR le bord) ; nouveau `conjugate_folded`, repliement explicite avec convention garantie aux bords ; essais
+   aux deux bords et de chaque côté.
+3. **Description de l'ancien défaut** : l'ancien `modulus_squared` valait exp(z) − Log(exp(z)) ; « exp(z) − z » (§11) n'est
+   vrai que dans la bande (pour z = 3 + 4i les deux diffèrent, la console le montrait).
+4. **Constantes des certificats** : la marge absolue de 1e−55 était avalée par l'arrondi à 50 chiffres (intervalle de
+   largeur nulle). Remplacé par un recalcul nœud par nœud en arithmétique d'intervalles, avec refus si un logarithme de
+   constante touche la coupure. Un compteur prouve qu'AUCUNE constante finie non nulle n'intervient dans les six
+   certificats : le compteur nul signifie précisément qu'aucune constante n'a emprunté le chemin de recalcul des
+   constantes finies non nulles hors feuille 1. Les résultats publiés n'étaient pas touchés.
+5. **Bornes décimales** (0,1 ; 0,05) : données en texte et arrondies vers l'extérieur ; disque exclu testé en intervalles
+   (majorant de la distance² < minorant du rayon²).
+6. **Succès à vide** : un certificat qui n'accepte aucun rectangle est maintenant un échec (Python et Julia).
+7. **Reproductibilité** : `python3 certify_branch_safety.py` et `julia certify.jl` rejouent chacun les six certificats du
+   README et sortent avec un code non nul si l'un échoue.
+
+53 essais passent (certificat, mutant, toolkit).

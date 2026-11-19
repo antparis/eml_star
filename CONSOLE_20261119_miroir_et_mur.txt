@@ -1,0 +1,18 @@
+1) Formule du miroir, log principal :
+   dans la bande −π ≤ Im z < π : 674 points, pire |formule − z̄| = 8.02e-62
+   partout (Im jusqu'à 15) : pire |formule − enroule(z̄)| = 6.22e-61
+   exemple z = 1 + 5i : formule = (1.0 + 1.283185307j) ; z̄ = (1.0 - 5.0j) ; enroule(z̄) = (1.0 + 1.283185307j)
+   bords (valeur exacte attendue : 0.5 + πi dans les DEUX cas ; l'arbre brut en flottant est instable sur le bord) :
+      Im z = −π → arbre brut (0.5 + 3.1415927j) ; Im z = +π → arbre brut (0.5 - 3.1415927j)
+2) Ce qui ne dépend JAMAIS du mur :
+   pire |exp(formule) − exp(z̄)| / |exp(z̄)| = 2.09e-61
+   pire |Re(formule) − Re(z)| = 7.78e-62
+3) Mutant de branche (le mur bouge à chaque log) :
+   (formule − z̄) / 2πi toujours entier : pire écart 1.56e-61 ; entiers vus -5 … 5
+4) Ce qu'on construit avec :
+   Re z = (z + formule)/2 : pire écart sur la partie réelle = 3.89e-62 ; partie imaginaire parasite max = 6.283 (0 dans la bande : 3.89e-62 )
+   |z|² = z · formule : pire écart dans la bande = 2.51e-60 ; hors bande, exemple z = 1 + 5i : (-5.4159265 + 6.2831853j) au lieu de 26
+5) ancien eml_toolkit/core.py, modulus_squared(z) = eml(z, eml★(z, 1)) = exp(z) − Log(exp(z)) :
+   z = (3.0 + 4.0j) : modulus_squared = (-16.12878308 - 12.91759916j) | |z|² = 25.0 | exp(z) − Log(exp(z)) = (-16.12878308 - 12.91759916j)
+   z = (1.0 + 0.0j) : modulus_squared = (1.718281828 + 0.0j) | |z|² = 1.0 | exp(z) − Log(exp(z)) = (1.718281828 + 0.0j)
+   z = (0.5 - 0.2j) : modulus_squared = (1.115856614 - 0.1275503515j) | |z|² = 0.29 | exp(z) − Log(exp(z)) = (1.115856614 - 0.1275503515j)

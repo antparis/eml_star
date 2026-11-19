@@ -74,15 +74,17 @@ Random-branch check (a random multiple of 2πi added to every logarithm with a v
 logarithms of constants untouched; 4000 points, 80 digits):
 × equals x·y to 6·10⁻⁷⁹; + equals x + y up to an integer multiple of 2πi.
 
-Reproduce: `python3 certify_branch_safety.py` (about 3 minutes), `python3 mur_et_infini.py`,
-`cd julia_check && julia --project=. certify.jl`. Full report: `FINDINGS_20261119_branch_safety_certificate.md`.
+Reproduce (each command prints the six certificates of the table and exits with a non-zero status if
+one fails): `python3 certify_branch_safety.py` (about 3 minutes), `cd julia_check && julia --project=. certify.jl`.
+Decimal bounds are rounded outward and the excluded disc is tested with guaranteed arithmetic.
+Branch checks: `python3 mur_et_infini.py`, `python3 branches_autorisees.py`. Full report: `FINDINGS_20261119_branch_safety_certificate.md`.
 
 > **Tree sizes.** The trees as written in this repository have 27 symbols (+) and 41 symbols (×).
 > The "RPN-length 19 / 17" quoted earlier refers to Odrzywołek's compiler output and has not been
 > re-checked against these trees.
 
 **Also corrected:** `eml_toolkit/core.py` returned wrong values for `E_sub`, `E_add`, `E_mul` and
-`modulus_squared` (it computed exp(z) − z), and `eml_toolkit/test_suite.py` silently fell back to
+`modulus_squared` (it computed exp(z) − Log(exp(z)), i.e. exp(z) − z inside the strip), and `eml_toolkit/test_suite.py` silently fell back to
 its own definitions instead of testing it. Both are fixed; `eml_toolkit/test_core.py` now imports
 `core.py` directly. Outside the strip −π ≤ Im z < π, the conjugation formula of Th. 3.1 returns z̄
 reduced modulo 2πi (its real part is always exact).

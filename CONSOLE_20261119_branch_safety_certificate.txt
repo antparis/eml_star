@@ -1,0 +1,9 @@
+Tailles : E_add 27, E_mul 41 symboles
+1) x + y, x,y ∈ [0,1;3]+i[−1,1] : CERTIFIÉ — 1 rectangles, 0 traversées absorbées, 0 dans le disque, profondeur 0, 0.1 s
+2) x × y (arbre d'origine), même domaine, hors |x−1| < 0,05 : CERTIFIÉ — 75592 rectangles, 22784 traversées absorbées, 98304 dans le disque, profondeur 7, 179.3 s
+3) x × y (forme lemme), même domaine, disque compris : CERTIFIÉ — 1 rectangles, 0 traversées absorbées, 0 dans le disque, profondeur 0, 0.0 s
+4) x + y sur [−3,3]+i[−3,3] privé de |Re|,|Im| < 0,1 : CERTIFIÉ — 2056 rectangles, 584 traversées absorbées, profondeur 2
+5) x × y (forme lemme) sur [−3,3]+i[−3,3] privé de |Re|,|Im| < 0,1 : CERTIFIÉ — 16 rectangles, 24 traversées absorbées, profondeur 0
+6) x + y (forme lemme) sur le carré plein [−3,3]+i[−3,3], zéro compris : CERTIFIÉ — 256 rectangles, 0 traversées absorbées, 0 dans le disque, profondeur 2, 0.1 s
+Constantes finies non nulles encadrées pendant ces certificats : 0
+Les six certificats attendus sont passés.
