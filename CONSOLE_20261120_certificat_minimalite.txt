@@ -1,0 +1,15 @@
+Contrôle 1, générateur : 714 arbres produits, 714 distincts, formule de dénombrement 714
+Contrôle 2, encadrement : l'intervalle de z0 contient strictement 37/100 et 61/100 (comparaison exacte en rationnels)
+Contrôle 3, règle (la fonction separe_de_zero, celle qu'utilise juger) : un écart dont les deux intervalles contiennent 0, même au bord, n'est PAS éliminé ; un seul intervalle strictement séparé de 0 suffit
+z0 = (37 + 61 i)/100 exact ; arbres énumérés : 714 ; par longueur RPN : {1: 2, 3: 8, 5: 64, 7: 640}
+      1 × éliminé (partie imaginaire de T(z0) − conj(z0) séparée de 0)
+    713 × éliminé (partie réelle de T(z0) − conj(z0) séparée de 0)
+INDÉCIS : 0
+Arbre(s) éliminé(s) par la partie imaginaire : ['z'] (prédit en relecture : la feuille z seule, car z0 − conj(z0) = 61i/50)
+Contrôle positif, l'arbre de 9 symboles F : INDÉCIS (les deux intervalles contiennent 0) (exigé : « les deux intervalles contiennent 0 », puisqu'il vaut exactement conj(z0))
+   [OK] 714 arbres énumérés
+   [OK] 0 indécis
+   [OK] 713 éliminés par la partie réelle
+   [OK] seule la feuille z éliminée par la partie imaginaire
+   [OK] contrôle positif F non éliminé, motif exact
+CONCLUSION : 714 arbres éliminés, 0 indécis : aucun arbre de longueur RPN ≤ 7 ne réalise le miroir ; 9 est minimal.

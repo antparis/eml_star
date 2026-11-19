@@ -1,0 +1,5 @@
+SymPy 1.14.0
+PASS: same tree shape, 9 RPN symbols, one star replacement
+PASS: starred = conjugate(z), control = z for finite nonzero complex z
+PASS: at i the outputs are -i and +i; both return -1 at -1
+PASS: at zero both traces are [+oo, +oo, -oo, 0] under extended evaluation

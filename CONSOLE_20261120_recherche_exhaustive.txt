@@ -1,0 +1,31 @@
+Recherche exhaustive (nuit du 19 au 20 novembre 2026), valeurs en 3 points de la bande, tolérance 1e-9, doubles.
+Résumé rédigé à partir des sorties brutes des deux scripts (sorties brutes non conservées ; relancer les scripts pour
+les reproduire : environ 8 minutes chacun).
+
+[A] recherche_exhaustive_miroir.py : opérateurs eml (e) et eml★ (s), feuilles {1, z}
+   2 feuilles (longueur RPN 3) : 6 fonctions nouvelles
+   3 feuilles (longueur RPN 5) : 36 fonctions nouvelles
+   4 feuilles (longueur RPN 7) : 267 fonctions nouvelles
+   5 feuilles (longueur RPN 9) : 2216 fonctions nouvelles ; trouvée : conj(z)
+   6 feuilles (longueur RPN 11) : 19569 fonctions nouvelles
+   7 feuilles (longueur RPN 13) : 181162 fonctions nouvelles
+   8 feuilles (longueur RPN 15) : 1737826 fonctions nouvelles
+   9 feuilles (longueur RPN 17) : 17114283 fonctions nouvelles (495 s)
+   conj(z)      : TROUVÉ, 5 feuilles, longueur RPN 9 : e(1,e(s(1,e(z,1)),1))
+   Re(z)        : pas trouvé (jusqu'à la longueur 17)
+   Im(z)        : pas trouvé (jusqu'à la longueur 17)
+   |z|^2        : TROUVÉ, 9 feuilles, longueur RPN 17 : e(e(1,e(e(e(1,e(e(1,s(1,z)),1)),z),1)),1)
+   -z           : TROUVÉ, 8 feuilles, longueur RPN 15 : e(e(1,e(1,e(1,e(e(1,1),1)))),e(z,1))
+   1 - z        : TROUVÉ, 6 feuilles, longueur RPN 11 : e(e(1,e(e(1,1),1)),e(z,1))
+   1 - conj(z)  : TROUVÉ, 6 feuilles, longueur RPN 11 : s(e(1,e(e(1,1),1)),e(z,1))
+   -conj(z)     : TROUVÉ, 8 feuilles, longueur RPN 15 : s(e(1,e(1,e(1,e(e(1,1),1)))),e(z,1))
+   i            : pas trouvé (jusqu'à la longueur 17)
+   Note : la recherche garde le premier arbre trouvé pour chaque fonction (comparée en 3 points de la bande). L'arbre
+   affiché pour conj(z) finit par un log et n'est juste que dans la bande ; l'arbre global F de même longueur,
+   e(e(1,e(s(1,z),1)),1), a les mêmes valeurs en ces points et a donc été écarté comme doublon.
+   Aucune des 2 + 6 + 36 + 267 fonctions de longueur ≤ 7 ne vaut conj(z) en ces points : 9 est la longueur minimale.
+
+[B] recherche_exhaustive_etoile_seule.py : opérateur eml★ SEUL, feuilles {1, z}, jusqu'à 10 feuilles (longueur 19,
+    4 333 243 fonctions nouvelles au dernier niveau, 484 s)
+   trouvés : 0 (longueur 7), ln z (longueur 7), z − 1 (longueur 11)
+   pas trouvés jusqu'à la longueur 19 : conj(z), Re(z), Im(z), −z, 1 − z, 1/z, i, |z|²

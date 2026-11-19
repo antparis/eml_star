@@ -302,3 +302,50 @@ différents (cas 3 : 1 rectangle en Python, 16 en Julia ; cas 5 : 16 rectangles 
    README et sortent avec un code non nul si l'un échoue.
 
 53 essais passent (certificat, mutant, toolkit).
+
+## 16. Un miroir global de neuf symboles (nuit du 19 au 20 novembre 2026)
+
+Origine : en comparant eml★ à une proposition publique de Quadruplay (un opérateur ternaire
+T(x, y, z) = exp(x) − Log(y) + Re(z) Im(z), discussion sur le dépôt VA00/SymbolicRegressionPackage), ChatGPT a appliqué
+le lemme d'absorption au DERNIER nœud et obtenu l'arbre ci-dessous ; une recherche exhaustive locale, lancée avant,
+avait trouvé un autre arbre de même longueur, juste seulement dans la bande.
+
+**Proposition (miroir global ; distincte du Théorème 3.1).** L'arbre de 9 symboles RPN, feuilles z et 1,
+
+    F(z) = eml( eml( 1, eml( eml★(1, z), 1 ) ), 1 )        postfixé : 1 1 z eml★ 1 eml eml 1 eml
+
+vérifie F(z) = conj(z) pour tout z ∈ ℂ \ {0} (log principal), et F(0) = 0 avec l'évaluation étendue
+(sorties des quatre nœuds : +∞, +∞, −∞, 0). Sans évaluation étendue, son domaine est ℂ \ {0}.
+
+*Preuve.* Pour z ≠ 0, posons w = Log(conj z) et v = exp(e − w), qui n'est jamais nul. Les deux derniers nœuds donnent
+exp(e − Log v) = e^e / v = exp(w) = conj(z). Seul exp(Log u) = u (u ≠ 0) est utilisé, jamais Log(exp u) = u : aucune
+bande n'intervient.
+
+*Contrôle « une seule étoile ».* La même forme avec eml à la place de l'unique eml★ donne z.
+
+Le Théorème 3.1 reste exact pour SA formule, 1 − eml★(0, eml(z, 1)), dans sa bande −π ≤ Im z < π ; hors de la bande
+elle rend conj(z) ramené modulo 2πi (§11). C'est une autre formule qui réalise la conjugaison partout.
+
+**Statuts.**
+
+| Résultat | Statut | Pièces |
+|---|---|---|
+| F(z) = conj(z) pour z fini non nul ; contrôle sans étoile = z ; en i : −i et +i ; en 0 : trace +∞, +∞, −∞, 0 | ÉTABLI : preuve courte + juge exact SymPy 1.14.0, sans tolérance (4 PASS, rejoué par Anthony) | `juge_miroir_exact.py`, `CONSOLE_20261120_juge_miroir_exact.txt` |
+| Mesure : 5 013 points jusqu'à \|Im\| = 200, axe négatif et bords ±π compris, écart relatif 7·10⁻⁵¹ | OBSERVÉ (échantillon) | `miroir_global.py`, `CONSOLE_20261119_miroir_global.txt` |
+| Aucun arbre {eml, eml★} à feuilles {1, z} de longueur RPN ≤ 7 ne réalise le miroir : 9 est minimal | CERTIFIÉ par machine (à relire) : les 714 arbres (2 + 8 + 64 + 640) sont encadrés au point rationnel exact z0 = (37 + 61i)/100 en arithmétique d'intervalles ; chacun a une coordonnée de T(z0) − conj(z0) séparée de 0 (713 par la partie réelle, 1 par la partie imaginaire), 0 indécis ; les constantes (zéro, infini, réel négatif) sont décidées exactement par SymPy. Contrôle positif : F reste indécis en z0, comme attendu. L'unique élimination par la partie imaginaire est la feuille z (prédit en relecture : z0 − conj(z0) = 61i/50). Contrôles du code inclus dans le script : 714 arbres produits = 714 distincts = dénombrement (formes de Catalan × feuilles × opérateurs) ; l'intervalle de z0 contient strictement 37/100 et 61/100 (comparaison exacte des bornes binaires) ; la fonction de décision réellement utilisée n'élimine jamais un écart dont les deux intervalles contiennent 0 ; le code de sortie n'est 0 que si les cinq attendus sont vérifiés (714 arbres, 0 indécis, 713 par la partie réelle, la feuille z seule par la partie imaginaire, F non éliminé avec le motif exact) ; une constante dont SymPy ne sait pas décider le signe rend l'arbre indécis au lieu d'interrompre le calcul. Convention : log principal, évaluation étendue. La borne vaut déjà sur ℂ \ {0} (z0 ≠ 0) | `certificat_minimalite.py`, `CONSOLE_20261120_certificat_minimalite.txt` (et `minimalite_miroir.py`, version flottante antérieure) |
+| Corollaire : pour tout compact K ⊂ ℂ, l'algèbre A_K est uniformément dense dans C(K, ℂ) (évaluation étendue si 0 ∈ K ; sinon tout compact de ℂ \ {0}) | DÉRIVÉ, à relire : la feuille donne z, F donne conj(z), continu sur K ; ℂ[z, z̄]\|_K ⊂ A_K et l'argument de Stone–Weierstrass déjà relu s'applique. Ne dépend pas de la minimalité | — |
+
+**Comparaison avec l'opérateur ternaire de Quadruplay** (même feuilles z et 1, même convention). Son extraction de Re et
+Im par translation est exacte (vérifié sur 2 000 points). Le témoin ternaire examiné ici (construit par ChatGPT, déplié
+et vérifié sur 313 points) construit la constante i et compte 811 symboles une fois déplié (270 nœuds, 541 feuilles),
+contre 9 pour F. La longueur minimale dans la grammaire ternaire reste indéterminée.
+
+**Résultats de la recherche exhaustive** (`recherche_exhaustive_miroir.py`, `recherche_exhaustive_etoile_seule.py`,
+`CONSOLE_20261120_recherche_exhaustive.txt` ; flottants, comparaison en 3 points, tolérance 1e−9 : HEURISTIQUE) :
+- |z|² par un seul arbre de 17 symboles, e(e(1,e(e(e(1,e(e(1,s(1,z)),1)),z),1)),1) (e = eml, s = eml★), mesuré égal à
+  |z|² sur 5 013 points (écart relatif 3·10⁻⁵⁰) ;
+- Re(z), Im(z) et la constante i : aucun arbre jusqu'à la longueur 17 ;
+- eml★ SEUL (sans eml), feuilles {1, z} : ni conj(z), ni Re, Im, −z, 1/z, i jusqu'à la longueur 19 (4,3 millions de
+  fonctions au dernier niveau). Question ouverte : {eml★, 1} est-il à lui seul une base ?
+
+Toujours ouvert : la densité uniforme des arbres INDIVIDUELS (§ 4.3 du manuscrit).
