@@ -253,10 +253,13 @@ E_{\mathrm{sub}}(a,b) &= \eml\bigl(E_{\ln}(a),E_{\exp}(b)\bigr),\\
 E_{+}(a,b)   &= E_{\mathrm{sub}}\bigl(a,E_{-}(b)\bigr), &
 E_{\times}(a,b) &= E_{\exp}\bigl(E_{+}(E_{\ln}(a),E_{\ln}(b))\bigr).
 \end{align*}
-Written out, $E_{+}$ has 27 symbols and $E_{\times}$ has 41 symbols (leaves
-plus operators).  The lengths 19 and 17 quoted in earlier versions refer to
-the output of Odrzywołek's compiler and have not been re-checked against
-these trees.
+Written out, $E_{+}$ has RPN length 27 (13 $\eml$ nodes) and $E_{\times}$ has
+RPN length 41 (20 $\eml$ nodes).  These lengths coincide with the ``EML
+Compiler'' column of Table~4 of~\cite{odrzywolek2026}; the expressions have
+not been compared symbol by symbol with the compiler output.  The lengths 19
+and 17 quoted in earlier versions are the \emph{direct-search} lengths of
+that table: shorter, different expressions, which are not the trees studied
+here.
 
 \paragraph{Extended evaluation.}  A tree is evaluated at a point node by
 node, with values in $\C\cup\{-\infty,+\infty\}$ and the rules $\ln 0=-\infty$,

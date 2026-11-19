@@ -79,9 +79,11 @@ one fails): `python3 certify_branch_safety.py` (about 3 minutes), `cd julia_chec
 Decimal bounds are rounded outward and the excluded disc is tested with guaranteed arithmetic.
 Branch checks: `python3 mur_et_infini.py`, `python3 branches_autorisees.py`. Full report: `FINDINGS_20261119_branch_safety_certificate.md`.
 
-> **Tree sizes.** The trees as written in this repository have 27 symbols (+) and 41 symbols (×).
-> The "RPN-length 19 / 17" quoted earlier refers to Odrzywołek's compiler output and has not been
-> re-checked against these trees.
+> **Tree sizes.** The trees used and tested in this repository have RPN length 27 for + (13 eml
+> nodes) and 41 for × (20 eml nodes). These lengths coincide with the "EML Compiler" column of
+> Odrzywołek's Table 4; the expressions themselves have not been compared symbol by symbol with his
+> compiler. The "RPN-length 19 / 17" quoted earlier are the *direct-search* lengths of that table:
+> shorter, different expressions, which were **not** the ones tested.
 
 **Also corrected:** `eml_toolkit/core.py` returned wrong values for `E_sub`, `E_add`, `E_mul` and
 `modulus_squared` (it computed exp(z) − Log(exp(z)), i.e. exp(z) − z inside the strip), and `eml_toolkit/test_suite.py` silently fell back to
