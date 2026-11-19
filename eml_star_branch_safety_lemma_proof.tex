@@ -16,6 +16,7 @@
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{lemma}[theorem]{Lemma}
 \newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
 \newtheorem{remark}[theorem]{Remark}
 \theoremstyle{definition}
 \newtheorem{definition}[theorem]{Definition}
@@ -220,26 +221,181 @@ Each occurrence of $\emlstar$ introduces a local conjugate recovery whose
 safety depends only on whether the imaginary part of its local argument lies
 in $[-\pi,\pi)$.
 
-\begin{assumption}[Branch safety of arithmetic trees]
-\label{ass:trees}
-For the specific addition tree (RPN-length~19) and multiplication tree
-(RPN-length~17) of Odrzywołek~\cite{odrzywolek2026}, every intermediate
-argument of every $\eml$-node has imaginary part in $(-\pi,\pi]$ whenever the
-global input satisfies $|\im(z)|<1$.
-\end{assumption}
-
-\begin{remark}
-Assumption~\ref{ass:trees} is verified numerically at 60 decimal places: zero
-violations were found on a grid and 1000 random samples inside $|\im(z)|<1$.
-A fully analytic interval-arithmetic proof --- propagating Im-bounds forward
-through each node --- is in principle obtainable but has not been written out
-in full; it remains an open verification task.
+\begin{remark}[Correction, November 2026]
+\label{rem:correction}
+Earlier versions of this note contained (a) an \emph{assumption}: for the
+addition and multiplication trees of Odrzywołek~\cite{odrzywolek2026}, every
+intermediate argument of every $\eml$-node has imaginary part in
+$(-\pi,\pi]$; and (b) a \emph{conclusion}: every composite tree ``evaluates
+without branch-cut crossings on $K$''.  Statement~(b) is \textbf{withdrawn}:
+it is false for the multiplication tree, which contains the sub-tree
+$E_{\ln}(E_{\ln}(x))$ and therefore takes the logarithm of $\Log x$, a
+negative real number for every real $x\in(0,1)$ (and $0$ for $x=1$); the value
+of that intermediate node jumps by $2\pi i$ across the segment $(0,1)$.
+Statement~(a) is not refuted by this example (a negative real has imaginary
+part $0$); it is simply not the relevant condition, since a bound on
+imaginary parts implies neither the absence of crossings nor continuity.
+The earlier numerical test (1000 random points) checked that the
+\emph{final} value is correct, which it is: the jump is erased by an
+exponential higher in the tree.  Both statements are replaced below by exact
+formulas (Propositions~\ref{prop:mul} and~\ref{prop:add}), a sufficient
+syntactic criterion (Remark~\ref{rem:doors}) and two computer-assisted
+certificates (Remark~\ref{rem:certificates}).
 \end{remark}
 
-By structural induction, if Assumption~\ref{ass:trees} holds for a given
-compact $K\subset\{z:|\im(z)|<\pi\}$, then every composite tree built from
-$\eml$, $\emlstar$, and the constant $1$ evaluates without branch-cut
-crossings on $K$.
+\paragraph{The trees.}  With $E_{\exp}(z)=\eml(z,1)$, the trees used here
+(file \texttt{branch\_safety\_final.py}) are
+\begin{align*}
+E_{\ln}(z)   &= \eml\bigl(1,\eml(\eml(1,z),1)\bigr), &
+E_{0}        &= \eml\bigl(1,\eml(\eml(1,1),1)\bigr),\\
+E_{-}(z)     &= \eml\bigl(\eml(1,\eml(\eml(1,E_0),1)),\,\eml(z,1)\bigr), &
+E_{\mathrm{sub}}(a,b) &= \eml\bigl(E_{\ln}(a),E_{\exp}(b)\bigr),\\
+E_{+}(a,b)   &= E_{\mathrm{sub}}\bigl(a,E_{-}(b)\bigr), &
+E_{\times}(a,b) &= E_{\exp}\bigl(E_{+}(E_{\ln}(a),E_{\ln}(b))\bigr).
+\end{align*}
+Written out, $E_{+}$ has 27 symbols and $E_{\times}$ has 41 symbols (leaves
+plus operators).  The lengths 19 and 17 quoted in earlier versions refer to
+the output of Odrzywołek's compiler and have not been re-checked against
+these trees.
+
+\paragraph{Extended evaluation.}  A tree is evaluated at a point node by
+node, with values in $\C\cup\{-\infty,+\infty\}$ and the rules $\ln 0=-\infty$,
+$e^{-\infty}=0$, $e^{+\infty}=+\infty$, $\ln(+\infty)=+\infty$ (the two
+infinities are kept distinct; $\infty-\infty$ and $\ln(-\infty)$ are
+undefined).  These rules apply to every node, whether or not its sub-tree
+contains a variable: for instance at $x=1$ the node $E_{\ln}(x)$ takes the
+value $0$ and the node above it takes a logarithm at $0$.  Logarithms whose
+argument is a constant (the leaf $1$, or a sub-tree without variable) always
+take their principal, respectively extended, value; in particular
+$\Log 1=0$.  Then $E_0=e-\ln(e^{e})=0$ exactly, and the head of $E_{-}$ is
+$\eml(1,\eml(\eml(1,0),1))=-\infty$, so that $E_{-}(z)=0-\Log(e^{z})$.
+
+Only three facts are used below: (i) $\exp(\log w)=w$ for every branch of the
+logarithm and every $w\neq0$; (ii) $\log(\exp u)=u+2\pi i k$ with $k\in\mathbb{Z}$
+for every branch; (iii) $\exp(u+2\pi i k)=\exp(u)$.  In what follows, a
+\emph{variable logarithm} is a logarithm of the tree whose argument depends
+on $x$ or $y$.
+
+\begin{lemma}[Absorption]
+\label{lem:absorption}
+For every $w\in\C\setminus\{0\}$ and every choice of branch for each of the
+two variable logarithms of $E_{\ln}$ (its one logarithm of the leaf $1$
+being $0$), $E_{\ln}(w)=\log w+2\pi i k$ for some $k\in\mathbb{Z}$, hence
+$\exp\bigl(E_{\ln}(w)\bigr)=w$.  In the extended evaluation,
+$\exp\bigl(E_{\ln}(0)\bigr)=0$.  Consequently
+$\eml\bigl(E_{\ln}(a),c\bigr)=a-\log c$ for every $a\in\C$.
+\end{lemma}
+
+\begin{proof}
+$E_{\ln}(w)=e-\log\bigl(\exp(e-\log w)\bigr)=e-(e-\log w+2\pi i k)$ by~(ii).
+Then use (i) and~(iii).  For $w=0$: $\eml(1,0)=+\infty$,
+$\eml(+\infty,1)=+\infty$, $\eml(1,+\infty)=-\infty$, $e^{-\infty}=0$.
+\end{proof}
+
+\begin{proposition}[Multiplication tree]
+\label{prop:mul}
+With the principal branch and the extended evaluation, $E_{\times}(x,y)=x\,y$
+for all $x,y\in\C\setminus\{0\}$; no condition on imaginary parts is needed.
+(At $x=1$, $E_{\ln}(x)=0$ and the evaluation passes through $\pm\infty$ as in
+Lemma~\ref{lem:absorption}.)  Moreover, let $F(x,y;\mathbf k)$ be the value
+obtained when the $j$-th of the eight variable logarithms of the tree is
+replaced by $L_j$, where $L_j(w)=\Log w+2\pi i k_j$ for finite nonzero
+complex $w$, $L_j(0)=-\infty$ and $L_j(+\infty)=+\infty$,
+$\mathbf k\in\mathbb{Z}^8$.  Then
+$F(x,y;\mathbf k)=x\,y$ for all $x,y\in\C\setminus\{0\}$ and all
+$\mathbf k$ (all shifts applied simultaneously).  This invariance does \emph{not} extend to the
+logarithms of constants: replacing $\Log 1=0$ by $2\pi i$ in the root node
+$\eml(u,1)$ alone changes the result by exactly $-2\pi i$.
+\end{proposition}
+
+\begin{proof}
+By (ii), $E_{-}(b)=-b+2\pi i m$.  By Lemma~\ref{lem:absorption} and (ii),
+$E_{\mathrm{sub}}(a,b)=a-b+2\pi i n$, hence $E_{+}(a,b)=a+b+2\pi i N$ with
+$N\in\mathbb{Z}$.  With $a=E_{\ln}(x)=\log x+2\pi i k$ and
+$b=E_{\ln}(y)=\log y+2\pi i k'$, (iii) and (i) give
+$E_{\times}(x,y)=\exp(\log x+\log y+2\pi i N')-\Log 1=x\,y$.  The logarithms
+of the leaf $1$ contribute $0$.
+
+\emph{Simultaneous shifts.}  In the computation above, the outputs of the
+sub-trees $E_{\ln}(\cdot)$, $E_{-}(\cdot)$, $E_{\mathrm{sub}}(\cdot,\cdot)$
+and $E_{+}(\cdot,\cdot)$ are each obtained as an explicit expression plus an
+unspecified integer multiple of $2\pi i$, and facts (i)--(iii) and
+Lemma~\ref{lem:absorption} are applied to the value actually received from
+below, whatever that integer is.  All eight shifts are therefore covered at
+once, not one at a time.  (This congruence is a statement about the outputs
+of those sub-trees, not about every node: a logarithm applied to a shifted
+value changes its real part as well.)  A shift is not always erased by the immediate parent:
+the outer logarithm of $E_{\ln}(x)$ sits in a node that is the \emph{second}
+argument of its parent, inside $E_{\ln}(E_{\ln}(x))$.  There the shifted
+value $a'=\Log x+2\pi i k$ ($k$ the net integer produced by the two
+variable logarithms of $E_{\ln}(x)$) is itself the argument $w$ of
+Lemma~\ref{lem:absorption}, which returns $\exp(E_{\ln}(a'))=a'$; the term
+$2\pi i k$ is thus carried additively into $E_{+}$ and is erased only by the
+exponential of the root.  Zero arguments: for $x,y\neq0$ the only variable
+logarithm that can be taken at $0$ is $\log a'$, and $a'=0$ forces $x=1$ and
+$k=0$ (because $|\im\Log x|\le\pi$); this is the case $w=0$ of
+Lemma~\ref{lem:absorption}.  For $k\neq0$ at $x=1$, $a'=2\pi i k\neq0$ and
+the evaluation is ordinary.
+\end{proof}
+
+\begin{proposition}[Addition tree]
+\label{prop:add}
+With the principal branch ($\Arg\in(-\pi,\pi]$) and the extended evaluation,
+for every $x\in\C$ and every $y\in\C$,
+\[
+  E_{+}(x,y)=x-P\bigl(-P(y)\bigr),\qquad P(u):=\Log(e^{u}),
+\]
+that is $E_{+}(x,y)=x+\tilde y$, where $\tilde y$ is the representative of
+$y$ modulo $2\pi i$ with $\im(\tilde y)\in[-\pi,\pi)$.  Hence
+$E_{+}(x,y)=x+y$ if and only if $\im(y)\in[-\pi,\pi)$; the condition bears on
+the second argument only.  On the boundary: $E_{+}(x,-i\pi)=x-i\pi$ (correct)
+and $E_{+}(x,i\pi)=x-i\pi$ (not $x+i\pi$).
+\end{proposition}
+
+\begin{proof}
+By Lemma~\ref{lem:absorption} (case $a=x$, including $x=0$),
+$E_{+}(x,y)=x-\Log\bigl(\exp(E_{-}(y))\bigr)$ with $E_{-}(y)=-P(y)$.
+$P(y)$ has imaginary part in $(-\pi,\pi]$, so $-P(y)$ has imaginary part in
+$[-\pi,\pi)$; $P$ fixes it unless that imaginary part equals $-\pi$, in which
+case it adds $2\pi i$.  In both cases $-P(-P(y))$ is the representative of
+$y$ with imaginary part in $[-\pi,\pi)$.
+\end{proof}
+
+\begin{remark}[The two-doors rule: a sufficient criterion]
+\label{rem:doors}
+In $\eml(x,y)=e^{x}-\Log y$, a node whose own logarithm crosses the cut has a
+value that jumps by $2\pi i k$ there.  If that node is the \emph{first}
+argument of its parent, the parent exponentiates it and the parent's value
+does not jump, by~(iii).  If it is the \emph{second} argument of its parent,
+or the root, this mechanism is not available at that node.  Hence a
+\emph{sufficient} condition for a tree to define a continuous function on a
+set: every crossing occurs at a node in first position, and no logarithm is
+taken at~$0$.  The condition is not claimed to be necessary: a jump that is
+not absorbed by the immediate parent could still be cancelled further up.
+\end{remark}
+
+\begin{remark}[Computer-assisted certificates]
+\label{rem:certificates}
+The two-doors rule has been checked by interval arithmetic with subdivision,
+independently in Python (\texttt{certify\_branch\_safety.py}, mpmath
+intervals, 50 digits) and in Julia (\texttt{julia\_check/certify.jl},
+IntervalArithmetic.jl, 200 bits, complex $\exp$ and $\log$ rebuilt from real
+functions).  Both certify continuity of $E_{+}$ and (using
+Lemma~\ref{lem:absorption} once) of $E_{\times}$ on
+$K=\{|\re|,|\im|\le3\}\setminus\{|\re|,|\im|<0.1\}$ for both variables, and of
+the original $E_{\times}$ on $[0.1,3]+i[-1,1]$ minus the disc $|x-1|<0.05$,
+with identical counts (75\,592 boxes, 22\,784 absorbed crossings).
+Propositions~\ref{prop:mul} and~\ref{prop:add} were also checked at 80 digits
+on 4000 random points with a random integer multiple of $2\pi i$ added to
+every variable logarithm (logarithms of constants left untouched).  The script
+\texttt{branches\_autorisees.py} numbers the 20 logarithms of $E_{\times}$,
+shifts them one at a time (the $\Log 1$ of the root gives exactly
+$-2\pi i$), lists the position of each variable logarithm (seven in first
+position, one in second position), and applies random simultaneous shifts
+$\mathbf k\in\{-3,\dots,3\}^8$ on 3000 points (largest relative error
+$5\cdot10^{-59}$), including $x=1$.  These runs are tests; the statement
+rests on the proof.  Details: \texttt{FINDINGS\_20261119\_branch\_safety\_certificate.md}.
+\end{remark}
 
 % ──────────────────────────────────────────────────────────────────────────────
 \section{Consequences for the Density Theorem}
@@ -247,29 +403,34 @@ crossings on $K$.
 
 \begin{theorem}[Stone--Weierstrass Density, Th.~4.3 of companion paper]
 \label{thm:density}
-Under Assumption~\ref{ass:trees}, for every compact
-$K\subset\{z:\im(z)\in(-\pi,\pi)\}$, the algebra generated by
-$\{\eml,\emlstar,1\}$ is dense in $C(K,\C)$.
+Let $K\subset\{z:\im(z)\in(-\pi,\pi)\}$ be compact, and let $A_K$ be the
+unital complex subalgebra of $C(K,\C)$ generated by the functions computed
+on $K$ by $\{\eml,\emlstar,1\}$-trees with leaf $z$ that are defined and
+continuous on $K$.  Then $A_K$ is dense in $C(K,\C)$.
 \end{theorem}
 
 \begin{proof}
-On such $K$, Lemma~\ref{lem:branch-safety} is exact and continuous, so
-$\conj{z}$ belongs to the algebra pointwise on $K$.  Combined with
-Assumption~\ref{ass:trees}, the algebra contains $z$, $\conj{z}$, all
-rational constants, and is closed under addition and multiplication; hence it
-contains $\Q[z,\conj{z}]$.
-
-The sub-algebra $A=\Q[z,\conj{z}]\subset C(K,\C)$ satisfies the hypotheses
-of the complex Stone--Weierstrass theorem~\cite{stone1948}:
-\begin{enumerate}[label=(\roman*)]
-  \item \emph{Separates points}: for $z_1\neq z_2$, $z\in A$ gives
-        $z(z_1)\neq z(z_2)$.
-  \item \emph{Does not vanish}: $1\in A$.
-  \item \emph{Closed under conjugation}: $z\in A$ and $\conj{z}\in A$ imply
-        $\conj{f}\in A$ for any $f\in A$.
-\end{enumerate}
-Hence $A$ is dense in $C(K,\C)$.
+The leaf gives $z\in A_K$.  By Lemma~\ref{lem:branch-safety}, the tree
+$\emlstar(0,\eml(z,1))$ is defined and continuous on $K$ and equals
+$1-\conj{z}$ there, so $\conj{z}\in A_K$.  Hence
+$\C[z,\conj{z}]\big|_K\subseteq A_K$.  The algebra $\C[z,\conj{z}]\big|_K$
+contains the constants, separates points (through $z$) and is closed under
+complex conjugation; by the complex Stone--Weierstrass
+theorem~\cite{stone1948} it is dense in $C(K,\C)$, and so is $A_K$.
 \end{proof}
+
+\begin{remark}[Density of $A_K$ versus single trees]
+The theorem proves uniform density of $A_K$; its proof uses the algebra
+operations of $C(K,\C)$ and does not need the arithmetic trees.  Whether the
+continuous single-tree functions are themselves uniformly dense on $K$ is a
+separate question, not settled here.  For nonempty $K$, exact representation
+of every element of $A_K$ by a single finite tree is impossible: the grammar
+has countably many trees, whereas $A_K$ contains every complex constant.
+Propositions~\ref{prop:mul} and~\ref{prop:add} give sufficient conditions for
+combining two already represented functions into one tree: for a product,
+both factors do not vanish on $K$; for a sum, the second summand takes values
+in $\im\in[-\pi,\pi)$.
+\end{remark}
 
 \begin{remark}
 Theorem~\ref{thm:density} does not contradict Theorem~2.1 of the companion
@@ -292,12 +453,18 @@ Lemma~\ref{lem:branch-safety} (conjugation formula) &
 Theorem~\ref{thm:domain} (exact domain $[-\pi,\pi)$) &
   Proved &
   Section~\ref{sec:sharpness} + SymPy \\
-Assumption~\ref{ass:trees} (arithmetic trees) &
-  Open (analytic) &
-  Numerically verified, 60~dps \\
+Former claim ``no branch-cut crossings on $K$'' &
+  \textbf{Withdrawn} (false for $\times$) &
+  Remark~\ref{rem:correction} \\
+Former assumption ($\im\in(-\pi,\pi]$ at every node) &
+  Not the relevant condition &
+  Remark~\ref{rem:correction} \\
+Propositions~\ref{prop:mul}, \ref{prop:add} (exact formulas) &
+  Proved (short proof, to be refereed) &
+  + interval certificates (Python, Julia) \\
 Theorem~\ref{thm:density} (Stone--Weierstrass) &
-  Conditional on Ass.~\ref{ass:trees} &
-  Complete given assumption \\
+  Proved for the algebra $A_K$ &
+  Density of single trees: separate, open \\
 \bottomrule
 \end{tabular}
 \end{center}
