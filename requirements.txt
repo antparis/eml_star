@@ -1,0 +1,4 @@
+# Versions avec lesquelles les essais et les certificats ont été rejoués (2026-11-19)
+mpmath==1.3.0
+sympy==1.14.0
+pytest==9.2.0

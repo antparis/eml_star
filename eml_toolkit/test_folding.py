@@ -71,13 +71,13 @@ def test_fold_to_band(n_points=10000, seed=42):
         ok = abs(err - k * TWO_PI) < 0.01
         print(f"    Im(z)={im_val:3d} -> err = {float(err):.4f} ~ {k}x2pi  "
               f"[{'PASS' if ok else 'FAIL'}]")
+        assert ok, f"out-of-band error is not an integer multiple of 2*pi for Im(z)={im_val}"
 
     assert success == n_points, f"Folding failed on {n_points - success} points"
     print(f"\n  PASS  100% of points folded correctly.")
     print(f"  PASS  Error = integer multiple of 2*pi confirmed out of band.")
-    return True
 
 
 if __name__ == "__main__":
-    ok = test_fold_to_band()
-    sys.exit(0 if ok else 1)
+    test_fold_to_band()          # raises AssertionError (non-zero exit) on failure
+    sys.exit(0)
