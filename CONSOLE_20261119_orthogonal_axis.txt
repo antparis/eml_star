@@ -1,0 +1,6 @@
+1) ln(ln x) around x=0.7: total jump (0.0 + 6.2831853j) | jump of the real part 0.0 | jump of u + conj(u) (0.0 + 0.0j) | jump of the imaginary part 6.2831853
+   E_add lemma form at (mpc(real='0.0', imag='0.0'), mpc(real='1.1999999999999999555910790149937383830547332763671875', imag='0.40000000000000002220446049250313080847263336181640625')) = (1.2 + 0.4j)
+   E_add lemma form at (mpc(real='-0.5', imag='0.20000000000000001110223024625156540423631668090820313'), mpc(real='0.0', imag='0.0')) = (-0.5 + 0.2j)
+   E_add lemma form at (mpc(real='0.0', imag='0.0'), mpc(real='0.0', imag='0.0')) = (0.0 + 0.0j)
+2) x + y (lemma form) on the FULL square [-3,3]+i[-3,3], zero included: CERTIFIED 256 boxes, 0.1 s 
+3) witness: 18000 values compared with x·y and x+y, worst difference = 1.09e-49

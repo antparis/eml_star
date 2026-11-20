@@ -1,0 +1,18 @@
+1) Mirror formula, principal log:
+   in the strip −π ≤ Im z < π: 674 points, worst |formula − z̄| = 8.02e-62
+   everywhere (Im up to 15): worst |formula − wrap(z̄)| = 6.22e-61
+   example z = 1 + 5i: formula = (1.0 + 1.283185307j) ; z̄ = (1.0 - 5.0j) ; wrap(z̄) = (1.0 + 1.283185307j)
+   edges (exact value expected: 0.5 + πi in BOTH cases; the raw tree in floating point is unstable on the edge):
+      Im z = −π → raw tree (0.5 + 3.1415927j) ; Im z = +π → raw tree (0.5 - 3.1415927j)
+2) What NEVER depends on the wall:
+   worst |exp(formula) − exp(z̄)| / |exp(z̄)| = 2.09e-61
+   worst |Re(formula) − Re(z)| = 7.78e-62
+3) Branch mutant (the wall moves at every log):
+   (formula − z̄) / 2πi always an integer: worst deviation 1.56e-61 ; integers seen -5 … 5
+4) What is built from it:
+   Re z = (z + formula)/2: worst deviation on the real part = 3.89e-62 ; max spurious imaginary part = 6.283 (0 in the strip: 3.89e-62 )
+   |z|² = z · formula: worst deviation in the strip = 2.51e-60 ; outside the strip, example z = 1 + 5i: (-5.4159265 + 6.2831853j) instead of 26
+5) old eml_toolkit/core.py, modulus_squared(z) = eml(z, eml★(z, 1)) = exp(z) − Log(exp(z)):
+   z = (3.0 + 4.0j) : modulus_squared = (-16.12878308 - 12.91759916j) | |z|² = 25.0 | exp(z) − Log(exp(z)) = (-16.12878308 - 12.91759916j)
+   z = (1.0 + 0.0j) : modulus_squared = (1.718281828 + 0.0j) | |z|² = 1.0 | exp(z) − Log(exp(z)) = (1.718281828 + 0.0j)
+   z = (0.5 - 0.2j) : modulus_squared = (1.115856614 - 0.1275503515j) | |z|² = 0.29 | exp(z) − Log(exp(z)) = (1.115856614 - 0.1275503515j)

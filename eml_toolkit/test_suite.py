@@ -23,10 +23,10 @@ TOL = mpmath.mpf("1e-45")
 EULER_GAMMA = mpmath.euler
 GLAISHER = mpmath.mpf("1.28242712910062263687534256886979172776768892732500119")
 
-# Import direct, sans définitions de secours : si core.py n'a pas ces noms, la suite doit échouer bruyamment.
-# (Jusqu'au 2026-11-19, un import raté basculait en silence sur des copies locales : core.py n'était pas testé.)
+# Direct import, with no fallback definitions: if core.py does not have these names, the suite must fail loudly.
+# (Until 2026-11-19, a failed import silently fell back to local copies: core.py was not tested.)
 import os, sys
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # pour « python eml_toolkit/test_suite.py »
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # for "python eml_toolkit/test_suite.py"
 from eml_toolkit.core import (
     eml, eml_star, eml_exp, eml_ln, eml_zero, eml_neg,
     eml_sub, eml_add, eml_inv, eml_mul,

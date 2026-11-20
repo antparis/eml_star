@@ -1,6 +1,0 @@
-1) ln(ln x) autour de x=0,7 : saut total (0.0 + 6.2831853j) | saut de la partie réelle 0.0 | saut de u + conj(u) (0.0 + 0.0j) | saut de la partie imaginaire 6.2831853
-   E_add forme lemme en (mpc(real='0.0', imag='0.0'), mpc(real='1.1999999999999999555910790149937383830547332763671875', imag='0.40000000000000002220446049250313080847263336181640625')) = (1.2 + 0.4j)
-   E_add forme lemme en (mpc(real='-0.5', imag='0.20000000000000001110223024625156540423631668090820313'), mpc(real='0.0', imag='0.0')) = (-0.5 + 0.2j)
-   E_add forme lemme en (mpc(real='0.0', imag='0.0'), mpc(real='0.0', imag='0.0')) = (0.0 + 0.0j)
-2) x + y (forme lemme) sur le carré PLEIN [-3,3]+i[-3,3], zéro compris : CERTIFIÉ 256 rectangles 
-3) témoin : 18000 valeurs comparées à x·y et x+y, pire écart = 1.09e-49

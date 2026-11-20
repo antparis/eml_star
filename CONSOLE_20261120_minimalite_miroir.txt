@@ -1,4 +1,0 @@
-Arbres de longueur RPN ≤ 7 énumérés : 714 (dont 0 infinis ou indéfinis en z0 = (0.37 + 0.61j))
-Plus petit écart à conj(z0) : 0.266964, atteint par ('eml', 'z', ('eml★', 'z', ('eml★', 'z', 'z')))
-Contrôle, l'arbre de 9 symboles en z0 : écart 8.7e-62
-CONCLUSION : aucun arbre de longueur ≤ 7 ne réalise conj ; 9 est minimal

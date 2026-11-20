@@ -1,8 +1,0 @@
-1) F(z) = eml(eml(1, eml(eml★(1, z), 1)), 1), 9 symboles
-    5013 points, |Im| jusqu'à 200, axe réel négatif et bords ±π compris : pire écart relatif avec conj(z) = 6.89e-51
-    F(0) avec l'évaluation étendue = 0.0 | nœuds en 0 : +inf +inf -inf
-2) contrôle, même forme sans l'étoile : pire écart relatif avec z = 6.89e-51 | et avec conj(z), hors axe réel : 2.0
-3) arbre trouvé par la recherche, eml(1, eml(eml★(1, eml(z, 1)), 1)) : dans la bande, 86 points, pire écart absolu = 1.34e-51 | hors bande, 4897 points, plus petit écart = 6.283
-4) |z|² en 17 symboles : pire écart relatif = 3.42e-50 | partie imaginaire max / valeur = 1.07e-50
-5) témoin ternaire G : 270 nœuds T, 541 feuilles, longueur dépliée 811 ; i construit = (-5.85087728895e-51 + 1.0j)
-   G(z) contre conj(z), 313 points, |Im| jusqu'à 50 : pire écart absolu = 7.53e-46

@@ -216,7 +216,7 @@ Attribution of the November 2026 results:
   pure-eml★ mirror.
 - Anthony ran the exact symbolic checks on his ThinkCentre.
 - Claude independently reconstructed the 101-symbol tree and wrote a
-  standalone SymPy verifier (miroir_etoile_seule_101.py).
+  standalone SymPy verifier (star_only_mirror_101.py).
 - The branch-safety correction (interval certificates, corrected statements,
   the FINDINGS report) was written with Claude. ChatGPT reviewed selected
   derivations and verification outputs; this was not a full audit.

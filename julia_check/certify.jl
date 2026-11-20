@@ -1,8 +1,8 @@
-# Deuxième avis sur certify_branch_safety.py : même règle (les deux portes, lemme A), mais un autre langage (Julia),
-# une autre bibliothèque d'intervalles (IntervalArithmetic.jl sur MPFR, au lieu de mpmath.iv), et un code récrit :
-# - exp et log complexes refaits à la main à partir des fonctions RÉELLES (exp, log, sin, cos, atan) ;
-# - constantes exactes par un petit calcul symbolique maison (au lieu de SymPy).
-# Lancer :  julia --project=. certify.jl
+# Second opinion on certify_branch_safety.py: same rule (the two gates, lemma A), but another language (Julia),
+# another interval library (IntervalArithmetic.jl on MPFR, instead of mpmath.iv), and rewritten code:
+# - complex exp and log redone by hand from the REAL functions (exp, log, sin, cos, atan);
+# - exact constants through a small home-made symbolic computation (instead of SymPy).
+# Run:  julia --project=. certify.jl
 using IntervalArithmetic
 setprecision(BigFloat, 200)
 const I = Interval{BigFloat}
@@ -16,20 +16,20 @@ neg(a::C) = C(-a.re, -a.im)
 conjc(a::C) = C(a.re, -a.im)
 cexp(a::C) = (r = exp(a.re); C(r * cos(a.im), r * sin(a.im)))
 lnmod(z::C) = log(z.re * z.re + z.im * z.im) / interval(BigFloat, 2)
-log_droite(z::C) = C(lnmod(z), atan(z.im / z.re))                      # Re z > 0
-log_haut(z::C)   = C(lnmod(z), PI / interval(BigFloat, 2) - atan(z.re / z.im))    # Im z > 0
-log_bas(z::C)    = C(lnmod(z), -PI / interval(BigFloat, 2) - atan(z.re / z.im))   # Im z < 0
-contient0(z::C) = inf(z.re) <= 0 <= sup(z.re) && inf(z.im) <= 0 <= sup(z.im)
+log_right(z::C) = C(lnmod(z), atan(z.im / z.re))                      # Re z > 0
+log_upper(z::C) = C(lnmod(z), PI / interval(BigFloat, 2) - atan(z.re / z.im))    # Im z > 0
+log_lower(z::C) = C(lnmod(z), -PI / interval(BigFloat, 2) - atan(z.re / z.im))   # Im z < 0
+contains0(z::C) = inf(z.re) <= 0 <= sup(z.re) && inf(z.im) <= 0 <= sup(z.im)
 
-struct Echec <: Exception; msg::String; end
+struct Failure <: Exception; msg::String; end
 
-# ---------- arbres ----------
+# ---------- trees ----------
 abstract type T end
-struct Un <: T end
-struct Var <: T; nom::Symbol; end
+struct One <: T end
+struct Var <: T; name::Symbol; end
 struct Eml <: T; a::T; b::T; star::Bool; end
-struct MoinsLn <: T; a::T; c::T; end          # a − ln c : seulement via le lemme A
-const ONE = Un(); const X = Var(:x); const Y = Var(:y)
+struct MinusLn <: T; a::T; c::T; end          # a − ln c: only through lemma A
+const ONE = One(); const X = Var(:x); const Y = Var(:y)
 eml(a, b) = Eml(a, b, false)
 E_exp(z) = eml(z, ONE)
 E_ln(z) = eml(ONE, eml(eml(ONE, z), ONE))
@@ -38,156 +38,156 @@ E_neg(z) = eml(eml(ONE, eml(eml(ONE, E_zero()), ONE)), eml(z, ONE))
 E_sub(a, b) = eml(E_ln(a), E_exp(b))
 E_add(a, b) = E_sub(a, E_neg(b))
 E_mul(a, b) = E_exp(E_add(E_ln(a), E_ln(b)))
-E_mul_lemme(a, b) = E_exp(MoinsLn(E_ln(a), E_exp(E_neg(E_ln(b)))))
-E_add_lemme(a, b) = MoinsLn(a, E_exp(E_neg(b)))
-avar(t::Un) = false; avar(t::Var) = true
-avar(t::Eml) = avar(t.a) || avar(t.b); avar(t::MoinsLn) = avar(t.a) || avar(t.c)
-taille(t::Un) = 1; taille(t::Var) = 1; taille(t::Eml) = 1 + taille(t.a) + taille(t.b)
+E_mul_lemma(a, b) = E_exp(MinusLn(E_ln(a), E_exp(E_neg(E_ln(b)))))
+E_add_lemma(a, b) = MinusLn(a, E_exp(E_neg(b)))
+hasvar(t::One) = false; hasvar(t::Var) = true
+hasvar(t::Eml) = hasvar(t.a) || hasvar(t.b); hasvar(t::MinusLn) = hasvar(t.a) || hasvar(t.c)
+treesize(t::One) = 1; treesize(t::Var) = 1; treesize(t::Eml) = 1 + treesize(t.a) + treesize(t.b)
 
-# ---------- constantes exactes sur les réels étendus : :zero, :pinf, :minf ou un terme réel fini ("exp(1)", …) ----------
-struct K; sorte::Symbol; terme::String; val::I; end
+# ---------- exact constants on the extended reals: :zero, :pinf, :minf or a finite real term ("exp(1)", …) ----------
+struct K; kind::Symbol; term::String; val::I; end
 kz() = K(:zero, "0", iv(0)); kp() = K(:pinf, "", iv(0)); km() = K(:minf, "", iv(0))
 function kexp(a::K)
-    a.sorte == :minf && return kz()
-    a.sorte == :pinf && return kp()
-    a.sorte == :zero && return K(:fini, "1", iv(1))
-    K(:fini, "exp(" * a.terme * ")", exp(a.val))
+    a.kind == :minf && return kz()
+    a.kind == :pinf && return kp()
+    a.kind == :zero && return K(:finite, "1", iv(1))
+    K(:finite, "exp(" * a.term * ")", exp(a.val))
 end
 function klog(b::K)
-    b.sorte == :minf && throw(Echec("ln(−∞)"))
-    b.sorte == :zero && return km()
-    b.sorte == :pinf && return kp()
-    b.terme == "1" && return kz()
-    m = match(r"^exp\((.*)\)$", b.terme)
-    if m !== nothing && equilibre(m.captures[1])
-        return K(:fini, String(m.captures[1]), log(b.val))        # ln(exp(s)) = s pour s réel
+    b.kind == :minf && throw(Failure("ln(−∞)"))
+    b.kind == :zero && return km()
+    b.kind == :pinf && return kp()
+    b.term == "1" && return kz()
+    m = match(r"^exp\((.*)\)$", b.term)
+    if m !== nothing && balanced(m.captures[1])
+        return K(:finite, String(m.captures[1]), log(b.val))        # ln(exp(s)) = s for real s
     end
-    inf(b.val) > 0 || throw(Echec("log d'une constante non positive"))
-    K(:fini, "ln(" * b.terme * ")", log(b.val))
+    inf(b.val) > 0 || throw(Failure("log of a non-positive constant"))
+    K(:finite, "ln(" * b.term * ")", log(b.val))
 end
-equilibre(s) = (n = 0; for ch in s; ch == '(' && (n += 1); ch == ')' && (n -= 1); n < 0 && return false; end; n == 0)
-function kmoins(e::K, l::K)
-    e.sorte == :pinf && l.sorte == :pinf && throw(Echec("∞ − ∞"))
-    l.sorte == :minf && return kp()
-    e.sorte == :pinf && return kp()
-    l.sorte == :pinf && return km()
-    l.sorte == :zero && return e
-    e.sorte == :fini && l.sorte == :fini && e.terme == l.terme && return kz()   # s − s = 0, exact
-    e.sorte == :zero && return K(:fini, "(0 - " * l.terme * ")", -l.val)
-    K(:fini, "(" * e.terme * " - " * l.terme * ")", e.val - l.val)
+balanced(s) = (n = 0; for ch in s; ch == '(' && (n += 1); ch == ')' && (n -= 1); n < 0 && return false; end; n == 0)
+function kminus(e::K, l::K)
+    e.kind == :pinf && l.kind == :pinf && throw(Failure("∞ − ∞"))
+    l.kind == :minf && return kp()
+    e.kind == :pinf && return kp()
+    l.kind == :pinf && return km()
+    l.kind == :zero && return e
+    e.kind == :finite && l.kind == :finite && e.term == l.term && return kz()   # s − s = 0, exact
+    e.kind == :zero && return K(:finite, "(0 - " * l.term * ")", -l.val)
+    K(:finite, "(" * e.term * " - " * l.term * ")", e.val - l.val)
 end
-konst(t::Un) = K(:fini, "1", iv(1))
-konst(t::Eml) = kmoins(kexp(konst(t.a)), klog(konst(t.b)))          # constantes réelles : la conjugaison ne change rien
+kconst(t::One) = K(:finite, "1", iv(1))
+kconst(t::Eml) = kminus(kexp(kconst(t.a)), klog(kconst(t.b)))          # real constants: conjugation changes nothing
 
-# ---------- évaluation : valeur complexe finie, ou :pinf / :minf ----------
-function ev(t::T, env, porte::Symbol, compte)
-    t isa Un && return C(iv(1), iv(0))
-    t isa Var && return env[t.nom]
-    if !avar(t)
-        k = konst(t)
-        k.sorte == :pinf && return :pinf
-        k.sorte == :minf && return :minf
+# ---------- evaluation: finite complex value, or :pinf / :minf ----------
+function ev(t::T, env, gate::Symbol, counter)
+    t isa One && return C(iv(1), iv(0))
+    t isa Var && return env[t.name]
+    if !hasvar(t)
+        k = kconst(t)
+        k.kind == :pinf && return :pinf
+        k.kind == :minf && return :minf
         return C(k.val, iv(0))
     end
-    if t isa MoinsLn
-        a = ev(t.a, env, porte, compte); b = ev(t.c, env, :y, compte)
-        (a isa Symbol || b isa Symbol) && throw(Echec("valeur infinie dans a − ln c"))
-        return a - logc(b, porte, compte, "a − ln c")
+    if t isa MinusLn
+        a = ev(t.a, env, gate, counter); b = ev(t.c, env, :y, counter)
+        (a isa Symbol || b isa Symbol) && throw(Failure("infinite value in a − ln c"))
+        return a - logc(b, gate, counter, "a − ln c")
     end
-    a = ev(t.a, env, :x, compte); b = ev(t.b, env, :y, compte)
+    a = ev(t.a, env, :x, counter); b = ev(t.b, env, :y, counter)
     if b isa Symbol
-        b == :minf && throw(Echec("ln(−∞)"))
-        a == :pinf && throw(Echec("∞ − ∞"))
+        b == :minf && throw(Failure("ln(−∞)"))
+        a == :pinf && throw(Failure("∞ − ∞"))
         return :minf
     end
     a == :pinf && return :pinf
     ea = a == :minf ? C(iv(0), iv(0)) : cexp(a)
-    ea - logc(t.star ? conjc(b) : b, porte, compte, "eml")
+    ea - logc(t.star ? conjc(b) : b, gate, counter, "eml")
 end
-function logc(z::C, porte, compte, ou)
-    contient0(z) && throw(Echec("log d'un rectangle qui contient zéro ($ou)"))
-    inf(z.re) > 0 && return log_droite(z)
-    inf(z.im) > 0 && return log_haut(z)
-    sup(z.im) < 0 && return log_bas(z)
-    if porte == :x                                  # à cheval sur l'axe négatif, absorbé par l'exp du parent
-        compte[] += 1
-        r = log_droite(neg(z))
+function logc(z::C, gate, counter, site)
+    contains0(z) && throw(Failure("log of a box that contains zero ($site)"))
+    inf(z.re) > 0 && return log_right(z)
+    inf(z.im) > 0 && return log_upper(z)
+    sup(z.im) < 0 && return log_lower(z)
+    if gate == :x                                   # straddling the negative axis, absorbed by the parent's exp
+        counter[] += 1
+        r = log_right(neg(z))
         return C(r.re, r.im + PI)
     end
-    throw(Echec("traversée de la coupure, porte $porte ($ou)"))
+    throw(Failure("branch-cut crossing, gate $gate ($site)"))
 end
 
-# ---------- découpage ----------
-struct Boite; r0::BigFloat; r1::BigFloat; i0::BigFloat; i1::BigFloat; end
-# Une borne décimale donnée en TEXTE ("0.1") est arrondie vers l'extérieur du rectangle ; un nombre est pris tel quel.
-bas(v) = v isa AbstractString ? parse(BigFloat, v, RoundDown) : BigFloat(v)
-haut(v) = v isa AbstractString ? parse(BigFloat, v, RoundUp) : BigFloat(v)
+# ---------- subdivision ----------
+struct Box; r0::BigFloat; r1::BigFloat; i0::BigFloat; i1::BigFloat; end
+# A decimal bound given as TEXT ("0.1") is rounded outwards from the box; a number is taken as is.
+lower(v) = v isa AbstractString ? parse(BigFloat, v, RoundDown) : BigFloat(v)
+upper(v) = v isa AbstractString ? parse(BigFloat, v, RoundUp) : BigFloat(v)
 Base.parse(::Type{BigFloat}, s::AbstractString, r::RoundingMode) = setrounding(() -> parse(BigFloat, s), BigFloat, r)
-B(a, b, c, d) = Boite(bas(a), haut(b), bas(c), haut(d))
-civ(b::Boite) = C(interval(b.r0, b.r1), interval(b.i0, b.i1))
-function couper(b::Boite)
+B(a, b, c, d) = Box(lower(a), upper(b), lower(c), upper(d))
+civ(b::Box) = C(interval(b.r0, b.r1), interval(b.i0, b.i1))
+function subdivide(b::Box)
     mr = (b.r0 + b.r1) / 2; mi = (b.i0 + b.i1) / 2
-    [Boite(b.r0, mr, b.i0, mi), Boite(mr, b.r1, b.i0, mi), Boite(b.r0, mr, mi, b.i1), Boite(mr, b.r1, mi, b.i1)]
+    [Box(b.r0, mr, b.i0, mi), Box(mr, b.r1, b.i0, mi), Box(b.r0, mr, mi, b.i1), Box(mr, b.r1, mi, b.i1)]
 end
-# Garanti : majorant de la distance² < minorant de rayon² (arithmétique d'intervalles) ; rayon décimal donné en texte.
-function dans_disque(b::Boite, c, r)
+# Guaranteed: upper bound of distance² < lower bound of radius² (interval arithmetic); decimal radius given as text.
+function in_disc(b::Box, c, r)
     ri = r isa AbstractString ? interval(parse(BigFloat, r, RoundDown), parse(BigFloat, r, RoundUp)) : interval(BigFloat(r))
     r2 = ri * ri
     all(sup((interval(x) - interval(real(c)))^2 + (interval(y) - interval(imag(c)))^2) < inf(r2) for x in (b.r0, b.r1), y in (b.i0, b.i1))
 end
 
-function certifier(t, bx::Boite, by::Boite; prof = 10, disque = nothing)
-    travail = [(bx, by, 0)]; ok = 0; exclues = 0; pmax = 0; compte = Ref(0); t0 = time()
-    while !isempty(travail)
-        x, y, d = pop!(travail)
-        if disque !== nothing && dans_disque(x, disque[1], disque[2]); exclues += 1; continue; end
+function certify(t, bx::Box, by::Box; depth = 10, disc = nothing)
+    work = [(bx, by, 0)]; ok = 0; excluded = 0; dmax = 0; counter = Ref(0); t0 = time()
+    while !isempty(work)
+        x, y, d = pop!(work)
+        if disc !== nothing && in_disc(x, disc[1], disc[2]); excluded += 1; continue; end
         try
-            r = ev(t, Dict(:x => civ(x), :y => civ(y)), :racine, compte)
-            r isa Symbol && throw(Echec("valeur infinie à la racine"))
-            ok += 1; pmax = max(pmax, d)
+            r = ev(t, Dict(:x => civ(x), :y => civ(y)), :root, counter)
+            r isa Symbol && throw(Failure("infinite value at the root"))
+            ok += 1; dmax = max(dmax, d)
         catch e
-            e isa Echec || rethrow()
-            d >= prof && return (certifie = false, boites = ok, absorbees = compte[], exclues = exclues, prof = d, s = round(time() - t0, digits = 1), raison = e.msg)
-            for a in couper(x), b in couper(y); push!(travail, (a, b, d + 1)); end
+            e isa Failure || rethrow()
+            d >= depth && return (certified = false, boxes = ok, absorbed = counter[], excluded = excluded, depth = d, s = round(time() - t0, digits = 1), reason = e.msg)
+            for a in subdivide(x), b in subdivide(y); push!(work, (a, b, d + 1)); end
         end
     end
-    ok == 0 && return (certifie = false, boites = 0, absorbees = 0, exclues = exclues, prof = 0, s = round(time() - t0, digits = 1), raison = "aucun rectangle accepté (tout est dans le disque exclu ?)")
-    (certifie = true, boites = ok, absorbees = compte[], exclues = exclues, prof = pmax, s = round(time() - t0, digits = 1), raison = "")
+    ok == 0 && return (certified = false, boxes = 0, absorbed = 0, excluded = excluded, depth = 0, s = round(time() - t0, digits = 1), reason = "no box accepted (is everything inside the excluded disc?)")
+    (certified = true, boxes = ok, absorbed = counter[], excluded = excluded, depth = dmax, s = round(time() - t0, digits = 1), reason = "")
 end
-const TOUS = Bool[]
-dire(nom, r) = (push!(TOUS, r.certifie); println(nom, " : ", r.certifie ? "CERTIFIÉ" : "ÉCHEC", " — ", r.boites, " rectangles, ", r.absorbees, " traversées absorbées, ",
-                       r.exclues, " dans le disque, profondeur ", r.prof, ", ", r.s, " s", r.raison == "" ? "" : " | " * r.raison))
+const ALL = Bool[]
+report(name, r) = (push!(ALL, r.certified); println(name, ": ", r.certified ? "CERTIFIED" : "FAILED", " — ", r.boxes, " boxes, ", r.absorbed, " absorbed crossings, ",
+                       r.excluded, " in the disc, depth ", r.depth, ", ", r.s, " s", r.reason == "" ? "" : " | " * r.reason))
 
-# ---------- contrôles de bon sens : le programme doit REFUSER ce qui saute ----------
+# ---------- sanity checks: the program must REFUSE whatever jumps ----------
 G = B(-2, -1, -0.1, 0.1)
-@assert konst(E_zero()).sorte == :zero
-@assert konst(eml(ONE, E_zero())).sorte == :pinf && konst(eml(ONE, eml(eml(ONE, E_zero()), ONE))).sorte == :minf
-@assert certifier(eml(eml(ONE, X), ONE), G, G; prof = 3).certifie            # porte x : absorbé
-@assert !certifier(eml(ONE, eml(ONE, X)), G, G; prof = 3).certifie           # porte y : refusé
-@assert !certifier(eml(ONE, X), G, G; prof = 3).certifie                     # racine : refusé
-@assert !certifier(eml(eml(ONE, X), ONE), B(-0.1, 0.1, -0.1, 0.1), G; prof = 3).certifie   # log de zéro : refusé
-@assert !certifier(E_mul(X, Y), B(0.9, 1.1, -0.1, 0.1), B(1.1, 1.5, -0.1, 0.1); prof = 4).certifie
-@assert !certifier(E_exp(X), B(0.99, 1.01, -0.01, 0.01), G; disque = (complex(BigFloat(1)), "0.5")).certifie   # tout dans le disque : pas un succès
-println("Contrôles de refus : passés. Tailles : E_add ", taille(E_add(X, Y)), ", E_mul ", taille(E_mul(X, Y)))
+@assert kconst(E_zero()).kind == :zero
+@assert kconst(eml(ONE, E_zero())).kind == :pinf && kconst(eml(ONE, eml(eml(ONE, E_zero()), ONE))).kind == :minf
+@assert certify(eml(eml(ONE, X), ONE), G, G; depth = 3).certified            # x gate: absorbed
+@assert !certify(eml(ONE, eml(ONE, X)), G, G; depth = 3).certified           # y gate: refused
+@assert !certify(eml(ONE, X), G, G; depth = 3).certified                     # root: refused
+@assert !certify(eml(eml(ONE, X), ONE), B(-0.1, 0.1, -0.1, 0.1), G; depth = 3).certified   # log of zero: refused
+@assert !certify(E_mul(X, Y), B(0.9, 1.1, -0.1, 0.1), B(1.1, 1.5, -0.1, 0.1); depth = 4).certified
+@assert !certify(E_exp(X), B(0.99, 1.01, -0.01, 0.01), G; disc = (complex(BigFloat(1)), "0.5")).certified   # everything in the disc: not a success
+println("Refusal checks: passed. Sizes: E_add ", treesize(E_add(X, Y)), ", E_mul ", treesize(E_mul(X, Y)))
 
-# ---------- les mêmes certificats que la version Python ----------
+# ---------- the same certificates as the Python version ----------
 D = B("0.1", 3, -1, 1)
-dire("1) x + y, x,y ∈ [0,1;3]+i[−1,1]", certifier(E_add(X, Y), D, D))
-dire("2) x × y (arbre d'origine), même domaine, hors |x−1| < 0,05", certifier(E_mul(X, Y), D, D; disque = (complex(BigFloat(1)), "0.05")))
-dire("3) x × y (forme lemme), même domaine, disque compris", certifier(E_mul_lemme(X, Y), D, D))
+report("1) x + y, x,y ∈ [0.1,3]+i[−1,1]", certify(E_add(X, Y), D, D))
+report("2) x × y (original tree), same domain, outside |x−1| < 0.05", certify(E_mul(X, Y), D, D; disc = (complex(BigFloat(1)), "0.05")))
+report("3) x × y (lemma form), same domain, disc included", certify(E_mul_lemma(X, Y), D, D))
 H = 3
 R = [B(-3, "-0.1", -H, H), B("0.1", 3, -H, H), B(-3, 3, "0.1", H), B(-3, 3, -H, "-0.1")]
-for (nom, t) in (("4) x + y", E_add(X, Y)), ("5) x × y (forme lemme)", E_mul_lemme(X, Y)))
-    tot = 0; ab = 0; ok = true; pm = 0
+for (name, t) in (("4) x + y", E_add(X, Y)), ("5) x × y (lemma form)", E_mul_lemma(X, Y)))
+    tot = 0; ab = 0; ok = true; dm = 0
     for bx in R, by in R
-        r = certifier(t, bx, by; prof = 9); tot += r.boites; ab += r.absorbees; ok &= r.certifie; pm = max(pm, r.prof)
+        r = certify(t, bx, by; depth = 9); tot += r.boxes; ab += r.absorbed; ok &= r.certified; dm = max(dm, r.depth)
     end
-    push!(TOUS, ok)
-    println(nom, " sur [−3,3]+i[−3,3] privé de |Re|,|Im| < 0,1 : ", ok ? "CERTIFIÉ" : "ÉCHEC", " — ", tot, " rectangles, ", ab, " traversées absorbées, profondeur ", pm)
+    push!(ALL, ok)
+    println(name, " on [−3,3]+i[−3,3] with |Re|,|Im| < 0.1 removed: ", ok ? "CERTIFIED" : "FAILED", " — ", tot, " boxes, ", ab, " absorbed crossings, depth ", dm)
 end
 P = B(-3, 3, -3, 3)
-dire("6) x + y (forme lemme) sur le carré plein [−3,3]+i[−3,3], zéro compris", certifier(E_add_lemme(X, Y), P, P; prof = 9))
-if !(all(TOUS) && length(TOUS) == 6)
-    println("AU MOINS UN CERTIFICAT ATTENDU A ÉCHOUÉ"); exit(1)
+report("6) x + y (lemma form) on the full square [−3,3]+i[−3,3], zero included", certify(E_add_lemma(X, Y), P, P; depth = 9))
+if !(all(ALL) && length(ALL) == 6)
+    println("AT LEAST ONE EXPECTED CERTIFICATE FAILED"); exit(1)
 end
-println("Les six certificats attendus sont passés.")
+println("The six expected certificates passed.")

@@ -1,18 +1,17 @@
-"""eml★ toolkit — fonctions de base (Monnerot 2026), à partir de eml (Odrzywołek 2026) et de eml★.
+"""eml★ toolkit — basic functions (Monnerot 2026), built from eml (Odrzywołek 2026) and eml★.
 
-Corrigé le 2026-11-19 (original : core.py.bak_2026-11-19). L'ancienne version donnait des résultats faux pour
-E_sub, E_add, E_mul et modulus_squared (modulus_squared(z) valait exp(z) − Log(exp(z)), soit exp(z) − z dans la
-bande |Im z| < π), et la suite d'essais ne
-l'importait pas réellement. Essais : eml_toolkit/test_core.py.
+Corrected on 2026-11-19 (original: core.py.bak_2026-11-19). The old version gave wrong results for
+E_sub, E_add, E_mul and modulus_squared (modulus_squared(z) was equal to exp(z) − Log(exp(z)), i.e. exp(z) − z in the
+strip |Im z| < π), and the test suite did not actually import it. Tests: eml_toolkit/test_core.py.
 
-Domaines de validité (mesurés et certifiés, voir FINDINGS_20261119_branch_safety_certificate.md) :
-- eml_mul(x, y) = x·y pour tous x, y non nuls, sans condition sur les parties imaginaires ;
-- eml_add(x, y) = x + y si |Im y| < π (sinon x + y à un nombre entier de tours 2πi près) ; aucune condition sur x ;
-- conjugate_formula(z) = conj(z) si −π ≤ Im z < π (Théorème 3.1) ; hors de cette bande, conj(z) à des tours 2πi près ;
-  real_part, imag_part, modulus_squared, modulus (et l'ancien nom E_conj) appellent cet arbre BRUT : ils héritent de
-  cette bande et de son instabilité numérique exactement sur les bords Im z = ±π. La seule fonction à convention
-  explicite et garantie aux bords est conjugate_folded.
-Les constantes passent par les réels étendus : ln 0 = −∞, exp(−∞) = 0, exp(+∞) = +∞, ln(+∞) = +∞."""
+Domains of validity (measured and certified, see FINDINGS_20261119_branch_safety_certificate.md):
+- eml_mul(x, y) = x·y for all nonzero x, y, with no condition on the imaginary parts;
+- eml_add(x, y) = x + y if |Im y| < π (otherwise x + y up to an integer number of turns of 2πi); no condition on x;
+- conjugate_formula(z) = conj(z) if −π ≤ Im z < π (Theorem 3.1); outside this strip, conj(z) up to turns of 2πi;
+  real_part, imag_part, modulus_squared, modulus (and the old name E_conj) call this RAW tree: they inherit this
+  strip and its numerical instability exactly on the edges Im z = ±π. The only function with an explicit
+  convention that is guaranteed at the edges is conjugate_folded.
+The constants go through the extended reals: ln 0 = −∞, exp(−∞) = 0, exp(+∞) = +∞, ln(+∞) = +∞."""
 import mpmath as mp
 
 mp.mp.dps = 60
@@ -31,14 +30,14 @@ def eml_star(x, y):
 
 
 def fold_to_strip(z):
-    """Ramène Im(z) dans [-π, π) par des tours entiers de 2π."""
+    """Brings Im(z) back into [-π, π) by whole turns of 2π."""
     re = mp.re(z)
     im = mp.im(z)
     folded_im = mp.fmod(im + mp.pi, mp.mpf(2) * mp.pi) - mp.pi
     return mp.mpc(re, folded_im)
 
 
-# ── Arbres holomorphes (eml seul) ─────────────────────────────────────────────
+# ── Holomorphic trees (eml alone) ─────────────────────────────────────────────
 
 def eml_exp(z):
     return eml(z, ONE)
@@ -49,12 +48,12 @@ def eml_ln(z):
 
 
 def eml_zero():
-    """eml(1, eml(eml(1, 1), 1)) = e − ln(e^e) = 0, exactement (en virgule flottante on obtiendrait ~1e-60)."""
+    """eml(1, eml(eml(1, 1), 1)) = e − ln(e^e) = 0, exactly (in floating point one would get ~1e-60)."""
     return mp.mpf(0)
 
 
 def eml_neg(z):
-    """−z = eml(C, eml(z, 1)) avec C = eml(1, eml(eml(1, 0), 1)) = −∞ : exp(−∞) − ln(exp z). Valide pour |Im z| < π."""
+    """−z = eml(C, eml(z, 1)) with C = eml(1, eml(eml(1, 0), 1)) = −∞: exp(−∞) − ln(exp z). Valid for |Im z| < π."""
     return eml(eml(ONE, eml(eml(ONE, eml_zero()), ONE)), eml(z, ONE))
 
 
@@ -74,39 +73,39 @@ def eml_mul(a, b):
     return eml_exp(eml_add(eml_ln(a), eml_ln(b)))
 
 
-# ── Partie anti-holomorphe (eml★) ─────────────────────────────────────────────
+# ── Anti-holomorphic part (eml★) ──────────────────────────────────────────────
 
 def conjugate_formula(z):
-    """Évaluation BRUTE de l'arbre 1 − eml★(0, eml(z, 1)) (Théorème 3.1).
+    """RAW evaluation of the tree 1 − eml★(0, eml(z, 1)) (Theorem 3.1).
 
-    Valeur exacte : Log(exp(conj z)), c'est-à-dire conj(z) ramené modulo 2πi dans −π < Im ≤ π ; égale à conj(z)
-    si et seulement si −π ≤ Im z < π. En virgule flottante, quand Im z vaut ±π (à l'arrondi près), exp(z) tombe à
-    un cheveu de l'axe réel négatif et le logarithme peut choisir l'un ou l'autre côté : résultat non fiable SUR le
-    bord. Pour une convention garantie aux bords, utiliser conjugate_folded."""
+    Exact value: Log(exp(conj z)), that is, conj(z) brought back modulo 2πi into −π < Im ≤ π; equal to conj(z)
+    if and only if −π ≤ Im z < π. In floating point, when Im z is equal to ±π (up to rounding), exp(z) lands
+    a hair's breadth from the negative real axis and the logarithm may choose either side: unreliable result ON the
+    edge. For a convention that is guaranteed at the edges, use conjugate_folded."""
     return ONE - eml_star(mp.mpc(0), eml(z, ONE))
 
 
 def conjugate_folded(z):
-    """Valeur exacte de la formule du miroir, calculée par repliement explicite (sans exp ni log) :
-    conj(z) ramené modulo 2πi dans −π < Im ≤ π. Convention aux bords : Im z = +π et Im z = −π donnent tous deux
-    Re z + iπ. Coïncide avec conj(z) pour −π ≤ Im z < π, et avec conjugate_formula(z) hors des bords."""
+    """Exact value of the mirror formula, computed by explicit folding (without exp or log):
+    conj(z) brought back modulo 2πi into −π < Im ≤ π. Convention at the edges: Im z = +π and Im z = −π both give
+    Re z + iπ. Coincides with conj(z) for −π ≤ Im z < π, and with conjugate_formula(z) away from the edges."""
     im = -mp.im(z)
     k = mp.ceil((im - mp.pi) / (2 * mp.pi))
     return mp.mpc(mp.re(z), im - 2 * mp.pi * k)
 
 
 def real_part(z):
-    """Re(z) = (z + conj(z)) / 2, avec conj par eml★ (bande du Théorème 3.1)."""
+    """Re(z) = (z + conj(z)) / 2, with conj via eml★ (strip of Theorem 3.1)."""
     return (z + conjugate_formula(z)) / 2
 
 
 def imag_part(z):
-    """Im(z) = (z − conj(z)) / (2i), avec conj par eml★ (bande du Théorème 3.1)."""
+    """Im(z) = (z − conj(z)) / (2i), with conj via eml★ (strip of Theorem 3.1)."""
     return (z - conjugate_formula(z)) / (2 * mp.j)
 
 
 def modulus_squared(z):
-    """|z|² = z · conj(z), avec conj par eml★ (bande du Théorème 3.1)."""
+    """|z|² = z · conj(z), with conj via eml★ (strip of Theorem 3.1)."""
     return z * conjugate_formula(z)
 
 
@@ -114,7 +113,7 @@ def modulus(z):
     return mp.sqrt(modulus_squared(z))
 
 
-# ── Base alternative {eml, Re, 1} : sans condition de bande ───────────────────
+# ── Alternative basis {eml, Re, 1}: no strip condition ────────────────────────
 
 def alt_conjugate(z):
     return 2 * mp.re(z) - z
@@ -124,7 +123,7 @@ def alt_modulus_squared(z):
     return mp.re(z) ** 2 + mp.im(z) ** 2
 
 
-# Anciens noms, gardés pour compatibilité
+# Old names, kept for compatibility
 E_neg, E_sub, E_add, E_mul, E_conj = eml_neg, eml_sub, eml_add, eml_mul, conjugate_formula
 
 __all__ = ['eml', 'eml_star', 'fold_to_strip', 'eml_exp', 'eml_ln', 'eml_zero', 'eml_neg', 'eml_sub', 'eml_add',

@@ -1,0 +1,20 @@
+× tree: 20 logarithms. Without shift: difference from x·y = 2.57e-61
+   argument is constant  : no effect                        — logs no. [8, 9, 11]
+   argument is variable  : no effect                        — logs no. [0, 2, 3, 5, 12, 14, 16, 18]
+   log of the leaf 1     : no effect                        — logs no. [6, 10]
+   log of the leaf 1     : result shifted by (-1.0 - 2.476e-62j) turn(s) — logs no. [19]
+   log of the leaf 1     : wrong result                     — logs no. [1, 4, 7, 13, 15, 17]
+Last node alone (log 1 of the root shifted by +2πi): result − x·y = (1.55575381947e-61 - 6.28318530718j) (expected −2πi = (0.0 - 6.28318530718j))
+Position, in its parent, of the node carrying each logarithm with a variable argument:
+   log no.  0: gate x (exponentiated by the parent)
+   log no.  2: gate y (its log is taken by the parent)
+   log no.  3: gate x (exponentiated by the parent)
+   log no.  5: gate x (exponentiated by the parent)
+   log no. 12: gate x (exponentiated by the parent)
+   log no. 14: gate x (exponentiated by the parent)
+   log no. 16: gate x (exponentiated by the parent)
+   log no. 18: gate x (exponentiated by the parent)
+Random SIMULTANEOUS shifts (−3…3 turns) on the 8 free logs, 3000 points: worst relative difference from x·y = 4.64e-59
+   at x = 1 exactly, all the free logs shifted by +0 turn(s): difference from x·y = 1.17e-61
+   at x = 1 exactly, all the free logs shifted by +1 turn(s): difference from x·y = 2.37e-60
+   at x = 1 exactly, all the free logs shifted by -2 turn(s): difference from x·y = 9.38e-60

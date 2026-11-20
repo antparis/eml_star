@@ -1,5 +1,5 @@
-"""Juge exact (SymPy, sans tolérance numérique) du miroir de 9 symboles et de son témoin sans étoile.
-Script proposé par ChatGPT le 2026-11-20, enregistré tel quel (seul ajout : cette docstring)."""
+"""Exact judge (SymPy, no numerical tolerance) of the 9-symbol mirror and of its star-free control.
+Script proposed by ChatGPT on 2026-11-20, recorded as is (only addition: this docstring)."""
 import sympy as sp
 STAR = "1 1 z eml★ 1 eml eml 1 eml".split()
 CONTROL = "1 1 z eml 1 eml eml 1 eml".split()

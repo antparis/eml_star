@@ -1,423 +1,425 @@
-# Certificat de branch-safety des arbres + et × — 2026-11-19
+# Branch-safety certificate for the + and × trees — 2026-11-19
 
-Fichiers : `certify_branch_safety.py` (certificat), `test_certify_branch_safety.py` (26 essais).
-Rien n'a été modifié dans l'article, le README ni les scripts existants ; rien n'a été poussé sur GitHub.
+*Translated from French on 2026-11-20. The French original is in the repository history at revision 365d88d. The scripts were translated at the same time (comments, messages, identifiers, file names) and re-run: the console files of this version come from the English scripts and carry the same numbers as the French runs, wall-clock timings aside (timings quoted in this report are those of the original runs). Replays attributed to Anthony Monnerot below were made on the French-language versions, at or before revision c074e6a.*
 
-## Résultat en une phrase
+Files: `certify_branch_safety.py` (certificate), `test_certify_branch_safety.py` (26 tests).
+Nothing was modified in the paper, the README or the existing scripts; nothing was pushed to GitHub.
 
-L'hypothèse publiée (« aucun nœud ne traverse la coupure ») est **fausse** pour l'arbre ×, mais la propriété dont
-le Théorème 4.3 a réellement besoin (les arbres + et × calculent des fonctions **continues** sur K) est maintenant
-**certifiée par ordinateur** sur K = [−3, 3] + i[−3, 3] privé du petit carré |Re|, |Im| < 0,1 autour de 0, pour x et y,
-moyennant un lemme de trois lignes prouvé à la main (lemme A ci-dessous).
+## Result in one sentence
 
-## 1. Ce qui était faux
+The published assumption ("no node crosses the branch cut") is **false** for the × tree, but the property that
+Theorem 4.3 actually needs (the + and × trees compute **continuous** functions on K) is now
+**computer-certified** on K = [−3, 3] + i[−3, 3] minus the small square |Re|, |Im| < 0.1 around 0, for x and y,
+given a three-line lemma proved by hand (Lemma A below).
 
-- Dans `E_mul`, le sous-arbre `E_ln(E_ln(x))` prend le logarithme de ln x. Pour x réel dans (0, 1), ln x < 0 :
-  ce log est pris **sur la coupure**. Mesuré : E_ln(ln(0,7 ± 10⁻¹² i)) = −1,031 ± 3,1416 i (saut de 2πi).
-  En x = 1, il prend ln 0.
-- Le résultat final reste juste (E_mul(0,7 ± 10⁻¹² i ; 1,3) = 0,91 ± 1,3·10⁻¹² i) : le saut est effacé plus haut par
-  une exponentielle.
-- L'Assumption de `eml_star_branch_safety_lemma_proof.tex` (« Im de chaque argument intermédiaire dans (−π, π] ») peut
-  rester vraie (ln(ln x) vaut Im = +π juste au-dessus et ≈ −π juste en dessous) : ce n'est pas la bonne condition.
-  La phrase « every composite tree … evaluates without branch-cut crossings on K » est fausse.
-- Le test du README (« 1000 random points, zero violations ») vérifie que la valeur finale est juste, pas l'absence
-  de traversée (mpmath calcule sur la coupure sans prévenir).
+## 1. What was wrong
 
-## 2. La bonne règle : les deux portes
+- In `E_mul`, the subtree `E_ln(E_ln(x))` takes the logarithm of ln x. For real x in (0, 1), ln x < 0:
+  this log is taken **on the branch cut**. Measured: E_ln(ln(0.7 ± 10⁻¹² i)) = −1.031 ± 3.1416 i (a jump of 2πi).
+  At x = 1, it takes ln 0.
+- The final result remains correct (E_mul(0.7 ± 10⁻¹² i, 1.3) = 0.91 ± 1.3·10⁻¹² i): the jump is erased higher up by
+  an exponential.
+- The Assumption of `eml_star_branch_safety_lemma_proof.tex` ("Im of every intermediate argument in (−π, π]") can
+  remain true (ln(ln x) has Im = +π just above and ≈ −π just below): it is not the right condition.
+  The sentence "every composite tree … evaluates without branch-cut crossings on K" is false.
+- The README test ("1000 random points, zero violations") checks that the final value is correct, not the absence
+  of crossings (mpmath computes on the branch cut without warning).
 
-`eml(x, y) = exp(x) − ln(y)`. Un log qui traverse l'axe réel négatif fait sauter la valeur de son nœud de 2πi·k.
+## 2. The right rule: the two gates
 
-- Nœud en **porte x** (premier argument du parent) : le parent calcule exp(nœud) ; exp(u + 2πik) = exp(u) : effacé.
-- Nœud en **porte y** (son log est repris) ou à la **racine** : le saut reste : refusé.
-- Log d'une valeur qui peut valoir **0** : refusé (sauf constantes, §3).
+`eml(x, y) = exp(x) − ln(y)`. A log that crosses the negative real axis makes the value of its node jump by 2πi·k.
 
-**Pourquoi un certificat réussi prouve la continuité.** Sur chaque rectangle accepté, le programme calcule avec une
-branche du log continue sur ce rectangle (principale si le rectangle évite (−∞, 0] ; tournée, ln(−y) + iπ, si le
-rectangle est à cheval sur l'axe négatif et loin de 0). Aux nœuds en porte x, la valeur ainsi calculée diffère de la
-valeur « principale » de 2πik, ce que l'exponentielle du parent efface ; ailleurs elle est égale. La fonction de la
-racine coïncide donc, sur chaque rectangle fermé, avec une fonction continue. Un nombre fini de rectangles fermés
-recouvre K : la fonction est continue sur K (lemme de recollement). La correction repose sur l'arrondi vers
-l'extérieur de mpmath.iv (50 chiffres).
+- Node at the **x gate** (first argument of the parent): the parent computes exp(node); exp(u + 2πik) = exp(u): erased.
+- Node at the **y gate** (its log is taken in turn) or at the **root**: the jump remains: rejected.
+- Log of a value that may equal **0**: rejected (except constants, §3).
 
-## 3. Les constantes
+**Why a successful certificate proves continuity.** On each accepted rectangle, the program computes with a
+branch of the log that is continuous on that rectangle (principal if the rectangle avoids (−∞, 0]; rotated, ln(−y) + iπ, if the
+rectangle straddles the negative axis and is far from 0). At the nodes at the x gate, the value computed in this way differs from the
+"principal" value by 2πik, which the parent's exponential erases; elsewhere it is equal. The function at the
+root therefore coincides, on each closed rectangle, with a continuous function. A finite number of closed rectangles
+covers K: the function is continuous on K (pasting lemma). Correctness relies on the outward rounding
+of mpmath.iv (50 digits).
 
-Les sous-arbres sans variable sont calculés exactement sur les **réels étendus** [−∞, +∞] (pas la sphère de Riemann :
-il faut distinguer exp(−∞) = 0 de exp(+∞) = +∞) : ln 0 = −∞, exp(−∞) = 0, exp(+∞) = +∞, ln(+∞) = +∞ ; ∞ − ∞ et ln(−∞)
-refusés. E_zero = e − ln(e^e) = 0 est décidé exactement par SymPy. Chaîne de E_neg : eml(1, 0) = +∞,
-eml(+∞, 1) = +∞, eml(1, +∞) = −∞, puis exp(−∞) = 0.
+## 3. The constants
 
-## 4. Le lemme A (à la main) et le point x = 1
+Subtrees without a variable are computed exactly over the **extended reals** [−∞, +∞] (not the Riemann sphere:
+exp(−∞) = 0 must be distinguished from exp(+∞) = +∞): ln 0 = −∞, exp(−∞) = 0, exp(+∞) = +∞, ln(+∞) = +∞; ∞ − ∞ and ln(−∞)
+rejected. E_zero = e − ln(e^e) = 0 is decided exactly by SymPy. Chain of E_neg: eml(1, 0) = +∞,
+eml(+∞, 1) = +∞, eml(1, +∞) = −∞, then exp(−∞) = 0.
 
-**Lemme A.** Pour tout w ∈ ℂ \ {0}, exp(E_ln(w)) = w.
-*Preuve.* E_ln(w) = e − Log(exp(e − Log w)). Pour tout u ∈ ℂ, Log(exp u) = u − 2πi·k(u) avec k(u) ∈ ℤ. Donc
-E_ln(w) = Log w + 2πi·k et exp(E_ln(w)) = exp(Log w) = w. Pour w = 0, avec les conventions du §3 :
+## 4. Lemma A (by hand) and the point x = 1
+
+**Lemma A.** For every w ∈ ℂ \ {0}, exp(E_ln(w)) = w.
+*Proof.* E_ln(w) = e − Log(exp(e − Log w)). For every u ∈ ℂ, Log(exp u) = u − 2πi·k(u) with k(u) ∈ ℤ. Hence
+E_ln(w) = Log w + 2πi·k and exp(E_ln(w)) = exp(Log w) = w. For w = 0, with the conventions of §3:
 eml(1, 0) = +∞, eml(+∞, 1) = +∞, eml(1, +∞) = −∞, exp(−∞) = 0 = w. ∎
 
-**Conséquence.** eml(E_ln(a), c) = a − Log c pour tout a. Dans E_mul, le seul passage par ln(ln x) est
-eml(E_ln(E_ln(x)), c) = E_ln(x) − Log c : on obtient l'arbre `E_mul_lemme`, égal à E_mul en tout point (vérifié aussi
-en des points, jusqu'à 10⁻³⁰, dont x = 1 + 10⁻⁶ + 10⁻⁷ i). C'est `E_mul_lemme` que le programme certifie : x = 1 n'a plus
-besoin d'être exclu, et le saut de ln x pour x réel négatif est effacé par l'exponentielle de la racine.
+**Consequence.** eml(E_ln(a), c) = a − Log c for every a. In E_mul, the only passage through ln(ln x) is
+eml(E_ln(E_ln(x)), c) = E_ln(x) − Log c: this gives the tree `E_mul_lemma`, equal to E_mul at every point (also checked
+at points, down to 10⁻³⁰, including x = 1 + 10⁻⁶ + 10⁻⁷ i). It is `E_mul_lemma` that the program certifies: x = 1 no longer
+needs to be excluded, and the jump of ln x for negative real x is erased by the exponential at the root.
 
-## 5. Mesures (`python3 certify_branch_safety.py` et essais)
+## 5. Measurements (`python3 certify_branch_safety.py` and tests)
 
-| Arbre | Domaine (pour x et pour y) | Résultat |
+| Tree | Domain (for x and for y) | Result |
 |---|---|---|
-| E_add | [0,1 ; 3] + i[−1, 1] (domaine du README) | certifié |
-| E_mul (arbre d'origine) | x ∈ [0,9 ; 1,1] + i[−0,1 ; 0,1] | échec (ln(ln x)), attendu |
-| E_mul (arbre d'origine) | x ∈ [0,5 ; 1,5] + i[−0,3 ; 0,3] privé du disque \|x − 1\| < 0,1 | certifié (traversées absorbées) |
-| E_mul (arbre d'origine) | [0,1 ; 3] + i[−1, 1] privé du disque \|x − 1\| < 0,05 | certifié : 75 592 rectangles, 22 784 traversées absorbées, 163 s |
-| E_mul_lemme | [0,1 ; 3] + i[−1, 1] (disque compris) | certifié en un rectangle |
-| E_add | [−3, 3] + i[−1, 1] privé de \|Re\|, \|Im\| < 0,1 | certifié : 16 rectangles, 8 traversées absorbées |
-| E_mul_lemme | idem | certifié : 16 rectangles, 24 traversées absorbées |
-| E_add | [−3, 3] + i[−3, 3] privé de \|Re\|, \|Im\| < 0,1 | certifié : 2 056 rectangles, 584 traversées absorbées, 2 s |
-| E_mul_lemme | idem | certifié : 16 rectangles, 24 traversées absorbées |
+| E_add | [0.1, 3] + i[−1, 1] (README domain) | certified |
+| E_mul (original tree) | x ∈ [0.9, 1.1] + i[−0.1, 0.1] | failure (ln(ln x)), expected |
+| E_mul (original tree) | x ∈ [0.5, 1.5] + i[−0.3, 0.3] minus the disc \|x − 1\| < 0.1 | certified (absorbed crossings) |
+| E_mul (original tree) | [0.1, 3] + i[−1, 1] minus the disc \|x − 1\| < 0.05 | certified: 75592 rectangles, 22784 absorbed crossings, 163 s |
+| E_mul_lemma | [0.1, 3] + i[−1, 1] (disc included) | certified in one rectangle |
+| E_add | [−3, 3] + i[−1, 1] minus \|Re\|, \|Im\| < 0.1 | certified: 16 rectangles, 8 absorbed crossings |
+| E_mul_lemma | same | certified: 16 rectangles, 24 absorbed crossings |
+| E_add | [−3, 3] + i[−3, 3] minus \|Re\|, \|Im\| < 0.1 | certified: 2056 rectangles, 584 absorbed crossings, 2 s |
+| E_mul_lemma | same | certified: 16 rectangles, 24 absorbed crossings |
 
-Les essais vérifient aussi que le programme **refuse** ce qui est vraiment discontinu (traversée en porte y, à la
-racine, log d'un rectangle contenant 0, valeur qui saute utilisée sous un log).
+The tests also check that the program **rejects** what is genuinely discontinuous (a crossing at the y gate, at the
+root, the log of a rectangle containing 0, a jumping value used under a log).
 
-## 6. Énoncé proposé pour remplacer l'Assumption (à décider par Anthony, rien n'est modifié)
+## 6. Proposed statement to replace the Assumption (for Anthony to decide, nothing is modified)
 
-> **Proposition (continuité certifiée des arbres arithmétiques).** Soit K = [−3, 3] + i[−3, 3] privé de
-> {|Re z| < 0,1, |Im z| < 0,1}. Les arbres E_add et E_mul d'Odrzywołek, évalués avec le logarithme principal et les
-> conventions des réels étendus pour leurs sous-arbres constants, définissent des fonctions continues sur K × K, égales
-> à x + y et x·y. Des nœuds intermédiaires traversent la coupure (−∞, 0] (par exemple ln(ln x) pour x ∈ (0, 1)), mais
-> chaque traversée est suivie d'une exponentielle qui en efface le saut de 2πi (règle des deux portes). Preuve : lemme A
-> et certificat par intervalles `certify_branch_safety.py`.
+> **Proposition (certified continuity of the arithmetic trees).** Let K = [−3, 3] + i[−3, 3] minus
+> {|Re z| < 0.1, |Im z| < 0.1}. Odrzywołek's trees E_add and E_mul, evaluated with the principal logarithm and the
+> extended-real conventions for their constant subtrees, define continuous functions on K × K, equal
+> to x + y and x·y. Some intermediate nodes cross the branch cut (−∞, 0] (for example ln(ln x) for x ∈ (0, 1)), but
+> each crossing is followed by an exponential that erases its 2πi jump (two-gate rule). Proof: Lemma A
+> and the interval certificate `certify_branch_safety.py`.
 
-À corriger aussi : la phrase « evaluates without branch-cut crossings on K », la ligne du tableau du README
-(« numerically confirmed … »), et la section « Branch-Safety Verification » du README.
+Also to be corrected: the sentence "evaluates without branch-cut crossings on K", the row of the README table
+("numerically confirmed …"), and the "Branch-Safety Verification" section of the README.
 
-## 7. Limites
+## 7. Limitations
 
-- K exclut un voisinage de 0 : ln 0 y est atteint par la variable, la multiplication passe par ln x.
-- |Im| ≤ 3 < π : au-delà, ln(exp(y)) ≠ y et E_neg change de valeur ; non essayé.
-- Tailles mesurées des arbres de `branch_safety_final.py` (feuilles + opérateurs) : E_add 27, E_mul 41. Le README
-  annonce « RPN-length 19 pour +, 17 pour × » et le script lui-même « K=13 et K=20 » : ces nombres ne désignent pas les
-  mêmes arbres. À vérifier contre `eml_compiler_v4.py` (Zenodo) avant de citer des longueurs.
-- Sortie brute des calculs : `CONSOLE_20261119_branch_safety_certificate.txt`.
+- K excludes a neighbourhood of 0: ln 0 is reached there by the variable, the multiplication goes through ln x.
+- |Im| ≤ 3 < π: beyond that, ln(exp(y)) ≠ y and E_neg changes value; not tried.
+- Measured sizes of the trees of `branch_safety_final.py` (leaves + operators): E_add 27, E_mul 41. The README
+  announces "RPN-length 19 for +, 17 for ×" and the script itself "K=13 and K=20": these numbers do not refer to the
+  same trees. To be checked against `eml_compiler_v4.py` (Zenodo) before quoting any lengths.
+- Raw output of the computations: `CONSOLE_20261119_branch_safety_certificate.txt`.
 
-## 8. Axe orthogonal (même jour) : ce que toutes nos analyses gardaient fixe
+## 8. Orthogonal axis (same day): what all our analyses kept fixed
 
-`axe_orthogonal.py` est le script de REPRODUCTION de ce paragraphe (remis en fichier le soir même : la trace d'origine
-venait des mêmes lignes tapées sans fichier). Il affiche ses résultats sans contrôler de verdict : son code de sortie
-ne signale pas un échec. La commande qui contrôle les six verdicts et sort en erreur en cas d'échec reste
-`python certify_branch_safety.py`. Sorties : `CONSOLE_20261119_axe_orthogonal.txt` (origine, avec la durée) et
-`CONSOLE_20261119_axe_orthogonal_rejeu.txt` (rejeu ; mêmes résultats affichés). Portée précisée après relecture : ce
-que le script OBSERVE et ce qui est DÉMONTRÉ sont séparés.
+`orthogonal_axis.py` is the REPRODUCTION script for this paragraph (put back into a file that same evening: the original trace
+came from the same lines typed without a file). It prints its results without checking any verdict: its exit code
+does not signal a failure. The command that checks the six verdicts and exits with an error on failure remains
+`python certify_branch_safety.py`. Outputs: `CONSOLE_20261119_orthogonal_axis.txt` (original, with the duration) and
+`CONSOLE_20261119_orthogonal_axis_replay.txt` (replay; same results printed). Scope clarified after review: what
+the script OBSERVES and what is PROVED are kept separate.
 
-- **Partie réelle et saut de 2πi.**
-  *Démontré (une ligne, sans le script)* : si les deux limites latérales de la valeur d'un nœud diffèrent de 2πi·k,
-  k entier, leurs parties réelles sont égales, car 2πi·k est imaginaire pur ; de même pour u + conj(u) = 2 Re u. Les
-  parties imaginaires diffèrent de 2πk ; la conjugaison change l'écart en −2πi·k sans l'effacer.
-  *Observé par le script, en UN seul couple de points* (x = 0,7 ± 10⁻¹² i, nœud ln(ln x)) : différence des deux valeurs
-  proche de 2πi (affichée `6.2831853j`), différence des parties réelles affichée 0, de u + ū affichée 0, des parties
-  imaginaires 6,2831853. Le saut exact de 2πi est celui des limites latérales ; deux points à distance 10⁻¹² n'en
-  donnent qu'une valeur approchée. C'est une illustration, pas une vérification sur un domaine. Remarque : Re n'est
-  pas un opérateur de la grammaire {eml, eml★, 1} ; cette « porte » concerne la base alternative {eml, Re, 1} ou une
-  partie réelle prise à l'extérieur de l'arbre.
-- **Addition jusqu'à zéro : seulement pour la FORME RÉCRITE par le lemme.** Notons P = [−3, 3] + i[−3, 3] et K = P privé
-  du petit carré ouvert |Re|, |Im| < 0,1.
-  Cas 6 des certificats : la forme récrite x − Log(exp(E_neg(y))) est certifiée sur P × P, zéro compris (256 rectangles).
-  Cas 4 : l'arbre d'origine E_add est certifié sur K × K (le petit carré est retiré de chacun des deux domaines, celui
-  de x et celui de y).
-  Le lien entre les deux formes est le lemme d'absorption, eml(E_ln(x), c) = x − Log c, y compris en x = 0 avec
-  l'évaluation étendue : il repose sur la preuve, pas sur le programme.
-- **Échantillon de points** (indépendant de la logique d'intervalles, même bibliothèque mpmath) : 6 000 couples (x, y),
-  trois comparaisons par couple (E_mul et sa forme récrite contre x·y, E_add contre x + y), soit 18 000 écarts absolus,
-  au log principal ordinaire. x est collé au segment (0, 1) ou à l'axe négatif (jusqu'à 10⁻³⁰), ou pris dans
-  [−3, 3] + i([−3, −0,1] ∪ [0,1 ; 3]) ; y vérifie |Re y| ∈ [0,1 ; 3] et Im y ∈ [−1, 1]. Maximum affiché sur cet
-  échantillon : 1,09·10⁻⁴⁹. Un échantillon ne prouve rien hors des points tirés.
+- **Real part and 2πi jump.**
+  *Proved (one line, without the script)*: if the two one-sided limits of the value of a node differ by 2πi·k,
+  k an integer, their real parts are equal, because 2πi·k is purely imaginary; likewise for u + conj(u) = 2 Re u. The
+  imaginary parts differ by 2πk; conjugation changes the gap into −2πi·k without erasing it.
+  *Observed by the script, at ONE single pair of points* (x = 0.7 ± 10⁻¹² i, node ln(ln x)): difference of the two values
+  close to 2πi (printed `6.2831853j`), difference of the real parts printed 0, of u + ū printed 0, of the imaginary
+  parts 6.2831853. The exact jump of 2πi is that of the one-sided limits; two points at distance 10⁻¹² give
+  only an approximate value of it. It is an illustration, not a verification over a domain. Remark: Re is not
+  an operator of the grammar {eml, eml★, 1}; this "gate" concerns the alternative basis {eml, Re, 1} or a
+  real part taken outside the tree.
+- **Addition down to zero: only for the FORM REWRITTEN by the lemma.** Write P = [−3, 3] + i[−3, 3] and K = P minus
+  the small open square |Re|, |Im| < 0.1.
+  Case 6 of the certificates: the rewritten form x − Log(exp(E_neg(y))) is certified on P × P, zero included (256 rectangles).
+  Case 4: the original tree E_add is certified on K × K (the small square is removed from each of the two domains, that
+  of x and that of y).
+  The link between the two forms is the absorption lemma, eml(E_ln(x), c) = x − Log c, including at x = 0 with
+  the extended evaluation: it rests on the proof, not on the program.
+- **Sample of points** (independent of the interval logic, same mpmath library): 6000 pairs (x, y),
+  three comparisons per pair (E_mul and its rewritten form against x·y, E_add against x + y), i.e. 18000 absolute differences,
+  with the ordinary principal log. x is placed right against the segment (0, 1) or the negative axis (down to 10⁻³⁰), or taken in
+  [−3, 3] + i([−3, −0.1] ∪ [0.1, 3]); y satisfies |Re y| ∈ [0.1, 3] and Im y ∈ [−1, 1]. Maximum printed on this
+  sample: 1.09·10⁻⁴⁹. A sample proves nothing outside the points drawn.
 
-Pistes notées à cette date, avec ce qu'elles sont devenues :
-- Multiplication en zéro (« porte de l'infini »). Le produit admet un prolongement continu de valeur zéro. Mais
-  évaluer l'arbre brut en x = 0 demanderait une convention supplémentaire ou une réécriture justifiée : E_ln(0) = −∞,
-  puis le sous-arbre E_ln(E_ln(0)) demande log(−∞), indéfini selon la convention retenue ; élargir les bornes des
-  intervalles ne résout pas cette opération.
-- Invariance de branche : démontrée pour des décalages simultanés arbitraires des huit logarithmes à argument
-  variable de l'arbre ×, les logarithmes constants gardant leur convention (§12, §13). Certains logarithmes constants
-  peuvent aussi être décalés isolément sans effet (le n° 6, §15) ; le n° 19 ne le peut pas.
-- Vérification par un outil indépendant : faite au §9, en Julia.
+Leads noted at that date, with what became of them:
+- Multiplication at zero ("infinity gate"). The product admits a continuous extension with value zero. But
+  evaluating the raw tree at x = 0 would require an additional convention or a justified rewriting: E_ln(0) = −∞,
+  then the subtree E_ln(E_ln(0)) requires log(−∞), undefined under the convention adopted; widening the bounds of the
+  intervals does not resolve this operation.
+- Branch invariance: proved for arbitrary simultaneous shifts of the eight logarithms with variable
+  argument in the × tree, the constant logarithms keeping their convention (§12, §13). Some constant logarithms
+  can also be shifted individually without effect (No. 6, §15); No. 19 cannot.
+- Verification by an independent tool: done in §9, in Julia.
 
-## 9. Deuxième avis : le même certificat récrit en Julia (`julia_check/certify.jl`, sortie `julia_check/sortie_julia.txt`)
+## 9. Second opinion: the same certificate rewritten in Julia (`julia_check/certify.jl`, output `julia_check/julia_output.txt`)
 
-Autre langage (Julia 1.12), autre bibliothèque d'intervalles (IntervalArithmetic.jl 1.0.14 sur MPFR, 200 bits), exp et log
-complexes refaits à la main à partir des fonctions réelles, constantes exactes par un petit calcul symbolique maison (sans
-SymPy). Ce qui reste commun aux deux versions : la règle (deux portes, lemme A) et son auteur.
+Another language (Julia 1.12), another interval library (IntervalArithmetic.jl 1.0.14 on MPFR, 200 bits), complex exp and log
+redone by hand from the real functions, exact constants through a small home-made symbolic computation (without
+SymPy). What remains common to the two versions: the rule (two gates, Lemma A) and its author.
 
-| Certificat | Python (mpmath.iv) | Julia (IntervalArithmetic) |
+| Certificate | Python (mpmath.iv) | Julia (IntervalArithmetic) |
 |---|---|---|
-| × d'origine, [0,1 ; 3] + i[−1, 1] hors \|x − 1\| < 0,05 | 75 592 rect., 22 784 absorbées, 98 304 exclues | **identique** : 75 592, 22 784, 98 304 (43 s) |
-| + sur [−3, 3] + i[−3, 3] privé du carré autour de 0 | 2 056 rect., 584 absorbées | **identique** : 2 056, 584 |
-| × forme lemme, même domaine | certifié, 16 rect. | certifié, 256 rect. |
-| × forme lemme, [0,1 ; 3] + i[−1, 1] | certifié, 1 rect. | certifié, 16 rect. |
-| + forme lemme, carré plein, zéro compris | certifié, 256 rect. | certifié, 256 rect. |
+| original ×, [0.1, 3] + i[−1, 1] outside \|x − 1\| < 0.05 | 75592 rect., 22784 absorbed, 98304 excluded | **identical**: 75592, 22784, 98304 (43 s) |
+| + on [−3, 3] + i[−3, 3] minus the square around 0 | 2056 rect., 584 absorbed | **identical**: 2056, 584 |
+| × lemma form, same domain | certified, 16 rect. | certified, 256 rect. |
+| × lemma form, [0.1, 3] + i[−1, 1] | certified, 1 rect. | certified, 16 rect. |
+| + lemma form, full square, zero included | certified, 256 rect. | certified, 256 rect. |
 
-Les deux lignes où le nombre de rectangles diffère : même verdict, mais l'exp complexe refait à la main encadre un peu plus
-large que celui de mpmath, donc Julia découpe une fois de plus. Les contrôles de refus (porte y, racine, log de zéro, × près
-de x = 1 sans disque) passent aussi en Julia.
+The two rows where the number of rectangles differs: same verdict, but the complex exp redone by hand encloses slightly more
+widely than that of mpmath, so Julia splits one more time. The rejection checks (y gate, root, log of zero, × near
+x = 1 without a disc) also pass in Julia.
 
-## 10. Le mur et l'infini : deux formules exactes (preuve à la main + mutant de branche)
+## 10. The wall and infinity: two exact formulas (hand proof + branch mutant)
 
-Script `mur_et_infini.py`, sortie `CONSOLE_20261119_mur_et_infini.txt`.
+Script `wall_and_infinity.py`, output `CONSOLE_20261119_wall_and_infinity.txt`.
 
-Trois faits seulement servent : (i) exp(log w) = w pour toute branche du log, w ≠ 0 ; (ii) log(exp u) = u + 2πi·(entier)
-pour toute branche ; (iii) exp(u + 2πik) = exp(u).
+Only three facts are used: (i) exp(log w) = w for every branch of the log, w ≠ 0; (ii) log(exp u) = u + 2πi·(integer)
+for every branch; (iii) exp(u + 2πik) = exp(u).
 
 - E_ln(w) = e − log(exp(e − log w)) = log w + 2πi·k (w ≠ 0).
-- E_neg(b) = 0 − log(exp(b)) = −b + 2πi·m (la constante de tête vaut −∞, exp(−∞) = 0). Aucune condition sur b.
-- E_sub(a, b) = exp(E_ln(a)) − log(exp(b)) = a − b + 2πi·n (lemme A ; a = 0 compris, par les réels étendus).
-- Donc **E_add(a, b) = a + b + 2πi·N**, N entier, et E_mul(x, y) = exp(E_add(E_ln x, E_ln y)) = exp(log x + log y + 2πi·N').
+- E_neg(b) = 0 − log(exp(b)) = −b + 2πi·m (the leading constant equals −∞, exp(−∞) = 0). No condition on b.
+- E_sub(a, b) = exp(E_ln(a)) − log(exp(b)) = a − b + 2πi·n (Lemma A; a = 0 included, through the extended reals).
+- Hence **E_add(a, b) = a + b + 2πi·N**, N an integer, and E_mul(x, y) = exp(E_add(E_ln x, E_ln y)) = exp(log x + log y + 2πi·N').
 
-**Théorème B (multiplication).** Pour tous x, y ∈ ℂ \ {0}, et quelle que soit la branche choisie pour chacun des
-logarithmes de l'arbre, E_mul(x, y) = x·y. (En x = 1 avec le log principal, E_ln(x) = 0 et l'arbre passe par les réels
-étendus : lemme A.) Conséquences : aucune condition sur les parties imaginaires ; le mur est une pure convention pour × ;
-la fonction se prolonge continûment par 0 en x = 0 et en y = 0 (le « trou » autour de 0 est une singularité effaçable :
-à x = 0 exactement, l'arbre d'origine demanderait ln(−∞), que les réels étendus refusent).
+**Theorem B (multiplication).** For all x, y ∈ ℂ \ {0}, and whatever branch is chosen for each of the
+logarithms of the tree, E_mul(x, y) = x·y. (At x = 1 with the principal log, E_ln(x) = 0 and the tree passes through the
+extended reals: Lemma A.) Consequences: no condition on the imaginary parts; the wall is a pure convention for ×;
+the function extends continuously by 0 at x = 0 and at y = 0 (the "hole" around 0 is a removable singularity:
+at x = 0 exactly, the original tree would require ln(−∞), which the extended reals refuse).
 
-**Théorème C (addition).** Avec le log principal, pour tout x ∈ ℂ et tout y ∈ ℂ, E_add(x, y) = x + enroule(y), où
-enroule(y) est y ramené dans la bande −π < Im ≤ π par un nombre entier de tours 2πi (bord Im y = ±π à préciser).
-En particulier E_add(x, y) = x + y si et seulement si y est dans la bande |Im y| < π : la condition porte sur y seul,
-jamais sur x. Avec une autre branche, la bande se déplace : l'addition, elle, dépend du mur.
+**Theorem C (addition).** With the principal log, for every x ∈ ℂ and every y ∈ ℂ, E_add(x, y) = x + wrap(y), where
+wrap(y) is y brought back into the strip −π < Im ≤ π by an integer number of turns 2πi (boundary Im y = ±π to be made precise).
+In particular E_add(x, y) = x + y if and only if y is in the strip |Im y| < π: the condition bears on y alone,
+never on x. With another branch, the strip moves: addition, for its part, does depend on the wall.
 
-Mesures (80 chiffres) :
-- Mutant de branche (chaque log reçoit 2πi·k, k tiré au hasard entre −3 et 3), 4 000 points, |Im| jusqu'à 12 :
-  × : pire écart relatif avec x·y = 5,6·10⁻⁷⁹ ; + : (résultat − (x + y)) / 2πi toujours entier (écart 1,9·10⁻⁷⁹), entiers de −5 à 5.
-- Log principal, 4 000 points, |Im| jusqu'à 40 (3 722 hors de la bande) : × : 1,6·10⁻⁸⁰ ; + contre x + enroule(y) : 4,1·10⁻⁷⁹.
-  Exemple : E_add(1, 5i) = 1 − 1,2832 i = 1 + (5 − 2π) i.
-- Vers zéro : |x| = 10⁻⁶⁰ : E_mul(x, y) = x·y à 3·10⁻⁷⁹ près (relatif), dans les deux positions.
+Measurements (80 digits):
+- Branch mutant (each log receives 2πi·k, k drawn at random between −3 and 3), 4,000 points, |Im| up to 12:
+  ×: worst relative deviation from x·y = 5.6·10⁻⁷⁹; +: (result − (x + y)) / 2πi always an integer (deviation 1.9·10⁻⁷⁹), integers from −5 to 5.
+- Principal log, 4,000 points, |Im| up to 40 (3,722 outside the strip): ×: 1.6·10⁻⁸⁰; + against x + wrap(y): 4.1·10⁻⁷⁹.
+  Example: E_add(1, 5i) = 1 − 1.2832 i = 1 + (5 − 2π) i.
+- Towards zero: |x| = 10⁻⁶⁰: E_mul(x, y) = x·y to within 3·10⁻⁷⁹ (relative), in both positions.
 
-Ce que cela change pour le Théorème 4.3 : la continuité de × sur tout compact de (ℂ \ {0})² et de + sur tout compact de
-ℂ × {|Im y| < π} découle des théorèmes B et C (preuve de quelques lignes, à faire relire) ; les certificats par
-intervalles (Python et Julia) en sont la confirmation par machine sur les domaines des §5, §8 et §9. Pour Stone–Weierstrass,
-les fonctions manipulées devront rester dans la bande |Im| < π au moment d'être additionnées en position y : c'est la
-vraie hypothèse, à écrire à la place de l'ancienne.
+What this changes for Theorem 4.3: the continuity of × on every compact subset of (ℂ \ {0})² and of + on every compact subset of
+ℂ × {|Im y| < π} follows from Theorems B and C (a proof of a few lines, to be submitted for review); the interval
+certificates (Python and Julia) are its machine confirmation on the domains of §5, §8 and §9. For Stone–Weierstrass,
+the functions handled will have to remain in the strip |Im| < π at the moment they are added in the y position: that is the
+true hypothesis, to be written in place of the old one.
 
-## 11. Ta barre face au mur (formule du miroir, Théorème 3.1)
+## 11. The conjugation bar facing the wall (mirror formula, Theorem 3.1)
 
-Script `miroir_et_mur.py`, sortie `CONSOLE_20261119_miroir_et_mur.txt` (60 chiffres, 3 000 points, Im jusqu'à 15).
+Script `mirror_and_wall.py`, output `CONSOLE_20261119_mirror_and_wall.txt` (60 digits, 3,000 points, Im up to 15).
 
-- **Le Théorème 3.1 est exact** dans sa bande −π ≤ Im z < π (674 points, écart 8·10⁻⁶²), bords compris (Im z = −π donne
-  bien 0,5 + πi). Le domaine annoncé [−π, π) est le bon, y compris le côté fermé.
-- **Hors de la bande, formule exacte nouvelle** : 1 − eml★(0, eml(z, 1)) = enroule(z̄), c'est-à-dire z̄ ramené dans la
-  bande par des tours entiers (exemple z = 1 + 5i → 1 + 1,2832 i = 1 + (2π − 5) i). Preuve : la formule vaut
+- **Theorem 3.1 is exact** in its strip −π ≤ Im z < π (674 points, deviation 8·10⁻⁶²), boundaries included (Im z = −π does
+  give 0.5 + πi). The stated domain [−π, π) is the right one, including the closed side.
+- **Outside the strip, a new exact formula**: 1 − eml★(0, eml(z, 1)) = wrap(z̄), that is, z̄ brought back into the
+  strip by whole turns (example z = 1 + 5i → 1 + 1.2832 i = 1 + (2π − 5) i). Proof: the formula equals
   Log(conj(exp z)) = Log(exp(z̄)).
-- **Ce qui ne dépend jamais du mur** : exp(formule) = exp(z̄) partout, et la partie réelle de la formule = Re z partout
-  (écart 8·10⁻⁶²). Avec le mutant de branche, formule − z̄ est toujours un nombre entier de tours 2πi (−5 … 5).
-- **Conséquences pour ce qu'on construit avec** : Re z = (z + formule)/2 a toujours la bonne partie réelle, mais reçoit hors
-  de la bande une partie imaginaire parasite (jusqu'à 2π ici) ; |z|² = z · formule n'est juste que dans la bande
-  (z = 1 + 5i donne −5,42 + 6,28 i au lieu de 26).
+- **What never depends on the wall**: exp(formula) = exp(z̄) everywhere, and the real part of the formula = Re z everywhere
+  (deviation 8·10⁻⁶²). With the branch mutant, formula − z̄ is always an integer number of turns 2πi (−5 … 5).
+- **Consequences for what is built with it**: Re z = (z + formula)/2 always has the right real part, but outside
+  the strip picks up a spurious imaginary part (up to 2π here); |z|² = z · formula is correct only in the strip
+  (z = 1 + 5i gives −5.42 + 6.28 i instead of 26).
 
-**Défaut dans le code public : `eml_toolkit/core.py`.**
-- `modulus_squared(z) = eml(z, eml★(z, 1))` vaut exp(z) − z, pas |z|² (z = 3 + 4i → −16,13 − 12,92 i au lieu de 25 ;
-  `modulus(3 + 4i)` = 1,51 − 4,29 i au lieu de 5). Ce fichier est dans le dépôt GitHub (commit a4e2202).
-- `real_part` et `imag_part` de core.py appellent mp.re / mp.im : pas des arbres eml★.
-- `eml_toolkit/test_suite.py` ne teste PAS core.py : son import échoue (core.py n'a pas `conjugate_formula`, `eml_exp`…)
-  et la suite bascule en silence sur ses propres définitions de secours (justes). D'où « 5 passed » malgré le défaut.
-- Correction proposée (non appliquée) : modulus_squared(z) = z * E_conj(z) (ou E_mul(z, E_conj(z))), avec la
-  condition −π ≤ Im z < π écrite dans la docstring, et une suite d'essais qui importe vraiment core.py (échec bruyant).
+**Defect in the public code: `eml_toolkit/core.py`.**
+- `modulus_squared(z) = eml(z, eml★(z, 1))` equals exp(z) − z, not |z|² (z = 3 + 4i → −16.13 − 12.92 i instead of 25;
+  `modulus(3 + 4i)` = 1.51 − 4.29 i instead of 5). This file is in the GitHub repository (commit a4e2202).
+- `real_part` and `imag_part` of core.py call mp.re / mp.im: not eml★ trees.
+- `eml_toolkit/test_suite.py` does NOT test core.py: its import fails (core.py has no `conjugate_formula`, `eml_exp`…)
+  and the suite silently switches to its own fallback definitions (which are correct). Hence "5 passed" despite the defect.
+- Proposed fix (not applied): modulus_squared(z) = z * E_conj(z) (or E_mul(z, E_conj(z))), with the
+  condition −π ≤ Im z < π written in the docstring, and a test suite that really imports core.py (loud failure).
 
-**Correction appliquée en local le 2026-11-19 (non commitée, non poussée)** : `eml_toolkit/core.py` récrit (original gardé :
-`core.py.bak_2026-11-19`). L'ancien fichier était faux aussi pour E_sub (exp(a) − b au lieu de a − b), E_add et E_mul
-(E_mul(1,3 + 0,1i ; 0,7 + 0,2i) donnait −1,7·10¹⁵ + 3·10¹⁶ i au lieu de 0,89 + 0,33i). Nouveaux essais
-`eml_toolkit/test_core.py` (8, import direct) ; `test_suite.py` importe maintenant core.py pour de bon (plus de définitions
-de secours ; original gardé en `.bak_2026-11-19`).
+**Fix applied locally on 2026-11-19 (not committed, not pushed)**: `eml_toolkit/core.py` rewritten (original kept:
+`core.py.bak_2026-11-19`). The old file was also wrong for E_sub (exp(a) − b instead of a − b), E_add and E_mul
+(E_mul(1.3 + 0.1i, 0.7 + 0.2i) gave −1.7·10¹⁵ + 3·10¹⁶ i instead of 0.89 + 0.33i). New tests
+`eml_toolkit/test_core.py` (8, direct import); `test_suite.py` now imports core.py for real (no more fallback
+definitions; original kept as `.bak_2026-11-19`).
 
-## 12. Relecture externe (ChatGPT, même jour) : cinq corrections acceptées
+## 12. External review (ChatGPT, same day): five corrections accepted
 
-Vérifié sur la machine avant d'être accepté (`branches_autorisees.py`, `CONSOLE_20261119_branches_autorisees.txt`).
+Verified on the machine before being accepted (`allowed_branches.py`, `CONSOLE_20261119_allowed_branches.txt`).
 
-1. **« Pour toute branche de chaque logarithme » était FAUX (§10, théorème B).** Contre-exemple confirmé : ln 1 = 2πi au
-   seul dernier nœud eml(u, 1) change le résultat d'exactement −2πi. Mon mutant ne le voyait pas : il exemptait ln 1.
-   Mesure, un logarithme décalé à la fois sur les 20 de l'arbre × : les 8 logarithmes à argument variable ne changent
-   rien ; ceux de la feuille 1 changent le résultat (décalage, valeur fausse ou indéfinie).
-   Énoncé corrigé : log principal ; l'invariance ne vaut que pour les logarithmes dont l'argument dépend de x ou y.
-2. **x = 1** : la convention des réels étendus était accordée aux seuls sous-arbres constants, alors que le nœud en cause
-   contient la variable. Corrigé : évaluation étendue définie nœud par nœud, en chaque point.
-3. **Bord de l'addition** : E_add(x, y) = x − P(−P(y)), P = Log∘exp ; le représentant a Im ∈ [−π, π) (vérifié : écart 0).
-   E_add(x, iπ) = x − iπ ; E_add(x, −iπ) = x − iπ (juste).
-4. **Théorème 4.3** : énoncé pour A_K, la sous-algèbre complexe unitaire de C(K, ℂ) engendrée par les fonctions d'arbres
-   continues sur K ; elle contient ℂ[z, z̄] : la question de la constante i est réglée pour cet énoncé. La parenthèse
-   « couper le second terme en N parts » est retirée (il faudrait un arbre pour g/N, y compris aux zéros de g).
-5. **Portée** : ce qui est retiré est la conclusion « sans traversée de coupure », pas la borne sur Im (qu'un réel négatif
-   ne réfute pas) ; la règle des deux portes est une condition SUFFISANTE (une traversée en seconde position n'est pas
-   absorbée par le parent immédiat : cela ne prouve pas une discontinuité à la racine).
+1. **"For every branch of each logarithm" was FALSE (§10, Theorem B).** Counterexample confirmed: ln 1 = 2πi at the
+   last node eml(u, 1) alone changes the result by exactly −2πi. My mutant did not see it: it exempted ln 1.
+   Measurement, one logarithm shifted at a time among the 20 of the × tree: the 8 logarithms with a variable argument change
+   nothing; those of the leaf 1 change the result (shift, wrong value or undefined).
+   Corrected statement: principal log; the invariance holds only for the logarithms whose argument depends on x or y.
+2. **x = 1**: the extended-reals convention was granted only to the constant subtrees, whereas the node in question
+   contains the variable. Corrected: extended evaluation defined node by node, at each point.
+3. **Boundary of addition**: E_add(x, y) = x − P(−P(y)), P = Log∘exp; the representative has Im ∈ [−π, π) (verified: deviation 0).
+   E_add(x, iπ) = x − iπ; E_add(x, −iπ) = x − iπ (correct).
+4. **Theorem 4.3**: stated for A_K, the unital complex subalgebra of C(K, ℂ) generated by the tree functions
+   continuous on K; it contains ℂ[z, z̄]: the question of the constant i is settled for this statement. The parenthesis
+   "cut the second term into N parts" is removed (it would require a tree for g/N, including at the zeros of g).
+5. **Scope**: what is withdrawn is the conclusion "without branch-cut crossing", not the bound on Im (which a negative real
+   does not refute); the two-gate rule is a SUFFICIENT condition (a crossing in second position is not
+   absorbed by the immediate parent: that does not prove a discontinuity at the root).
 
-Les énoncés à jour sont ceux de `eml_star_branch_safety_lemma_proof.tex` et du README ; le §10 ci-dessus est conservé tel
-qu'écrit, avec son erreur, pour l'historique.
+The up-to-date statements are those of `eml_star_branch_safety_lemma_proof.tex` and of the README; §10 above is kept as
+written, with its error, for the record.
 
-## 13. Décalages simultanés (question de ChatGPT) et un argument de Gemini réfuté
+## 13. Simultaneous shifts (ChatGPT's question) and an argument by Gemini refuted
 
-- **Question** : tester chaque logarithme séparément ne prouve pas qu'on peut en déplacer plusieurs ensemble.
-- **Réponse** : la preuve algébrique couvre les 8 décalages à la fois (récurrence des feuilles vers la racine, chaque valeur
-  connue « à 2πi près ») ; c'est maintenant écrit dans la preuve de la proposition ×, avec le cas des arguments nuls
-  (a' = Log x + 2πik = 0 impose x = 1 et k = 0).
-- **Argument de Gemini réfuté par mesure** : « chaque logarithme variable entre directement dans une exponentielle ».
-  Faux pour le log n° 2 (le log extérieur de E_ln(x)) : son nœud est en porte y, à l'intérieur de E_ln(E_ln(x)). Son décalage
-  n'est pas effacé par le parent immédiat : il est transporté tel quel (lemme d'absorption) jusqu'à l'exponentielle de la
-  racine. Les 7 autres sont en porte x. Conséquence : la règle des deux portes est bien seulement suffisante.
-- **Mesure** (`branches_autorisees.py`) : décalages simultanés au hasard (−3…3 tours) sur les 8 logs, 3 000 points :
-  pire écart relatif 4,6·10⁻⁵⁹ ; en x = 1 exactement avec 0, +1, −2 tours partout : écart ≤ 10⁻⁵⁹.
+- **Question**: testing each logarithm separately does not prove that several can be moved together.
+- **Answer**: the algebraic proof covers the 8 shifts at once (induction from the leaves to the root, each value
+  known "up to 2πi"); this is now written in the proof of the × proposition, with the case of zero arguments
+  (a' = Log x + 2πik = 0 forces x = 1 and k = 0).
+- **Gemini's argument refuted by measurement**: "each variable logarithm enters directly into an exponential".
+  False for log no. 2 (the outer log of E_ln(x)): its node is in the y gate, inside E_ln(E_ln(x)). Its shift
+  is not erased by the immediate parent: it is carried unchanged (absorption lemma) up to the exponential of the
+  root. The other 7 are in the x gate. Consequence: the two-gate rule is indeed only sufficient.
+- **Measurement** (`allowed_branches.py`): simultaneous random shifts (−3…3 turns) on the 8 logs, 3,000 points:
+  worst relative deviation 4.6·10⁻⁵⁹; at x = 1 exactly with 0, +1, −2 turns everywhere: deviation ≤ 10⁻⁵⁹.
 
-## 14. Deuxième relecture de ChatGPT : trois retouches acceptées
+## 14. ChatGPT's second review: three adjustments accepted
 
-1. Logarithmes décalés définis aux valeurs exceptionnelles : L_j(w) = Log w + 2πi k_j pour w fini non nul, L_j(0) = −∞,
-   L_j(+∞) = +∞. La phrase « la valeur de chaque nœud à 2πi près » était inexacte (un log appliqué à une valeur décalée
-   change aussi de partie réelle) : la congruence porte sur les sorties des sous-arbres E_ln, E_neg, E_sub, E_add.
-   Erreur de comptage corrigée : E_ln contient UN log de la feuille 1, pas deux.
-2. Remarque après le Théorème 4.3 : représenter exactement tout élément de A_K par un seul arbre fini est IMPOSSIBLE
-   (les arbres sont en nombre dénombrable, A_K contient toutes les constantes complexes). La densité uniforme des arbres
-   uniques est une question distincte, ouverte.
-3. Ligne du README alignée : « A_K is uniformly dense » ; ce qui est retiré est l'affirmation « sans traversée ».
+1. Shifted logarithms defined at the exceptional values: L_j(w) = Log w + 2πi k_j for finite nonzero w, L_j(0) = −∞,
+   L_j(+∞) = +∞. The sentence "the value of each node up to 2πi" was inaccurate (a log applied to a shifted value
+   also changes its real part): the congruence bears on the outputs of the subtrees E_ln, E_neg, E_sub, E_add.
+   Counting error corrected: E_ln contains ONE log of the leaf 1, not two.
+2. Remark after Theorem 4.3: representing exactly every element of A_K by a single finite tree is IMPOSSIBLE
+   (the trees are countably many, A_K contains all the complex constants). The uniform density of single
+   trees is a distinct question, open.
+3. README line aligned: "A_K is uniformly dense"; what is withdrawn is the claim "without crossing".
 
-Avis de ChatGPT après ces retouches : favorable au commit documentaire local ; la revue de core.py et des scripts reste distincte.
+ChatGPT's opinion after these adjustments: in favour of the local documentation commit; the review of core.py and of the scripts remains separate.
 
-## 15. Relecture du code (auto-relecture puis ChatGPT) : défauts corrigés avant le second commit
+## 15. Code review (self-review then ChatGPT): defects fixed before the second commit
 
-Aucun de ces défauts ne change un verdict. Les deux implémentations annoncent le succès sur les six domaines testés.
-Leurs compteurs concordent dans les cas 1, 2, 4 et 6. Les cas 3 et 5 aboutissent au même verdict avec des découpages
-différents (cas 3 : 1 rectangle en Python, 16 en Julia ; cas 5 : 16 rectangles et 24 traversées comptées en Python,
-256 et 400 en Julia).
+None of these defects changes a verdict. Both implementations report success on the six domains tested.
+Their counters agree in cases 1, 2, 4 and 6. Cases 3 and 5 reach the same verdict with different
+subdivisions (case 3: 1 rectangle in Python, 16 in Julia; case 5: 16 rectangles and 24 crossings counted in Python,
+256 and 400 in Julia).
 
-1. **Mutant, log n° 6 classé « indéfini » à tort** (le script renvoyait `None` sans calculer). Calcul exact : décaler le
-   ln 1 le plus profond de E_zero donne e − 2πi, puis exp(e − 2πi) = exp(e), et E_zero reste 0 : aucun effet. Le n° 7
-   (ln 1 du milieu de E_zero) donne un résultat faux. Classement corrigé des 20 logarithmes : 8 à argument variable sans
-   effet ; constants 8, 9, 11 sans effet ; feuille 1 : n° 6 et 10 sans effet, n° 19 décale de −2πi, n° 1, 4, 7, 13, 15, 17
-   faussent le résultat. Régressions : `test_branches_autorisees.py`.
-2. **Bord du miroir.** Valeur exacte de la formule : Log(exp(z̄)), donc ½ + iπ pour z = ½ + iπ ET pour z = ½ − iπ.
-   L'arbre brut en flottant rend ½ − iπ au bord supérieur : sur le bord, exp(z) est à un cheveu de l'axe négatif et le
-   log choisit un côté au hasard de l'arrondi. `core.py` : `conjugate_formula` reste l'arbre brut (documenté comme non
-   fiable SUR le bord) ; nouveau `conjugate_folded`, repliement explicite avec convention garantie aux bords ; essais
-   aux deux bords et de chaque côté.
-3. **Description de l'ancien défaut** : l'ancien `modulus_squared` valait exp(z) − Log(exp(z)) ; « exp(z) − z » (§11) n'est
-   vrai que dans la bande (pour z = 3 + 4i les deux diffèrent, la console le montrait).
-4. **Constantes des certificats** : la marge absolue de 1e−55 était avalée par l'arrondi à 50 chiffres (intervalle de
-   largeur nulle). Remplacé par un recalcul nœud par nœud en arithmétique d'intervalles, avec refus si un logarithme de
-   constante touche la coupure. Un compteur prouve qu'AUCUNE constante finie non nulle n'intervient dans les six
-   certificats : le compteur nul signifie précisément qu'aucune constante n'a emprunté le chemin de recalcul des
-   constantes finies non nulles hors feuille 1. Les résultats publiés n'étaient pas touchés.
-5. **Bornes décimales** (0,1 ; 0,05) : données en texte et arrondies vers l'extérieur ; disque exclu testé en intervalles
-   (majorant de la distance² < minorant du rayon²).
-6. **Succès à vide** : un certificat qui n'accepte aucun rectangle est maintenant un échec (Python et Julia).
-7. **Reproductibilité** : `python3 certify_branch_safety.py` et `julia certify.jl` rejouent chacun les six certificats du
-   README et sortent avec un code non nul si l'un échoue.
+1. **Mutant, log no. 6 wrongly classified "undefined"** (the script returned `None` without computing). Exact computation: shifting the
+   deepest ln 1 of E_zero gives e − 2πi, then exp(e − 2πi) = exp(e), and E_zero remains 0: no effect. No. 7
+   (the middle ln 1 of E_zero) gives a wrong result. Corrected classification of the 20 logarithms: 8 with a variable argument, no
+   effect; constants 8, 9, 11, no effect; leaf 1: nos. 6 and 10 no effect, no. 19 shifts by −2πi, nos. 1, 4, 7, 13, 15, 17
+   make the result wrong. Regressions: `test_allowed_branches.py`.
+2. **Boundary of the mirror.** Exact value of the formula: Log(exp(z̄)), hence ½ + iπ for z = ½ + iπ AND for z = ½ − iπ.
+   The raw tree in floating point returns ½ − iπ at the upper boundary: on the boundary, exp(z) is a hair's breadth from the negative axis and the
+   log picks a side at the whim of the rounding. `core.py`: `conjugate_formula` remains the raw tree (documented as not
+   reliable ON the boundary); new `conjugate_folded`, explicit folding with a guaranteed convention at the boundaries; tests
+   at both boundaries and on each side.
+3. **Description of the old defect**: the old `modulus_squared` equalled exp(z) − Log(exp(z)); "exp(z) − z" (§11) is
+   true only in the strip (for z = 3 + 4i the two differ, the console showed it).
+4. **Constants of the certificates**: the absolute margin of 1e−55 was swallowed by the rounding to 50 digits (interval of
+   zero width). Replaced by a node-by-node recomputation in interval arithmetic, with refusal if a logarithm of a
+   constant touches the branch cut. A counter proves that NO finite nonzero constant is involved in the six
+   certificates: the zero counter means precisely that no constant took the recomputation path of the
+   finite nonzero constants other than leaf 1. The published results were not affected.
+5. **Decimal bounds** (0.1; 0.05): given as text and rounded outward; excluded disc tested in intervals
+   (upper bound of the distance² < lower bound of the radius²).
+6. **Vacuous success**: a certificate that accepts no rectangle is now a failure (Python and Julia).
+7. **Reproducibility**: `python3 certify_branch_safety.py` and `julia certify.jl` each replay the six certificates of the
+   README and exit with a nonzero code if one of them fails.
 
-53 essais passent (certificat, mutant, toolkit).
+53 tests pass (certificate, mutant, toolkit).
 
-## 16. Un miroir global de neuf symboles (nuit du 19 au 20 novembre 2026)
+## 16. A global mirror of nine symbols (night of 19 to 20 November 2026)
 
-Origine : en comparant eml★ à une proposition publique de Quadruplay (un opérateur ternaire
-T(x, y, z) = exp(x) − Log(y) + Re(z) Im(z), discussion sur le dépôt VA00/SymbolicRegressionPackage), ChatGPT a appliqué
-le lemme d'absorption au DERNIER nœud et obtenu l'arbre ci-dessous ; une recherche exhaustive locale, lancée avant,
-avait trouvé un autre arbre de même longueur, juste seulement dans la bande.
+Origin: while comparing eml★ with a public proposal by Quadruplay (a ternary operator
+T(x, y, z) = exp(x) − Log(y) + Re(z) Im(z), discussion on the VA00/SymbolicRegressionPackage repository), ChatGPT applied
+the absorption lemma to the LAST node and obtained the tree below; a local exhaustive search, launched earlier,
+had found another tree of the same length, correct only in the strip.
 
-**Proposition (miroir global ; distincte du Théorème 3.1).** L'arbre de 9 symboles RPN, feuilles z et 1,
+**Proposition (global mirror; distinct from Theorem 3.1).** The tree of 9 RPN symbols, leaves z and 1,
 
-    F(z) = eml( eml( 1, eml( eml★(1, z), 1 ) ), 1 )        postfixé : 1 1 z eml★ 1 eml eml 1 eml
+    F(z) = eml( eml( 1, eml( eml★(1, z), 1 ) ), 1 )        postfix: 1 1 z eml★ 1 eml eml 1 eml
 
-vérifie F(z) = conj(z) pour tout z ∈ ℂ \ {0} (log principal), et F(0) = 0 avec l'évaluation étendue
-(sorties des quatre nœuds : +∞, +∞, −∞, 0). Sans évaluation étendue, son domaine est ℂ \ {0}.
+satisfies F(z) = conj(z) for every z ∈ ℂ \ {0} (principal log), and F(0) = 0 with extended evaluation
+(outputs of the four nodes: +∞, +∞, −∞, 0). Without extended evaluation, its domain is ℂ \ {0}.
 
-*Preuve.* Pour z ≠ 0, posons w = Log(conj z) et v = exp(e − w), qui n'est jamais nul. Les deux derniers nœuds donnent
-exp(e − Log v) = e^e / v = exp(w) = conj(z). Seul exp(Log u) = u (u ≠ 0) est utilisé, jamais Log(exp u) = u : aucune
-bande n'intervient.
+*Proof.* For z ≠ 0, set w = Log(conj z) and v = exp(e − w), which is never zero. The last two nodes give
+exp(e − Log v) = e^e / v = exp(w) = conj(z). Only exp(Log u) = u (u ≠ 0) is used, never Log(exp u) = u: no
+strip is involved.
 
-*Contrôle « une seule étoile ».* La même forme avec eml à la place de l'unique eml★ donne z.
+*"A single star" control.* The same form with eml in place of the only eml★ gives z.
 
-Le Théorème 3.1 reste exact pour SA formule, 1 − eml★(0, eml(z, 1)), dans sa bande −π ≤ Im z < π ; hors de la bande
-elle rend conj(z) ramené modulo 2πi (§11). C'est une autre formule qui réalise la conjugaison partout.
+Theorem 3.1 remains exact for ITS formula, 1 − eml★(0, eml(z, 1)), in its strip −π ≤ Im z < π; outside the strip
+it returns conj(z) reduced modulo 2πi (§11). It is a different formula that realises conjugation everywhere.
 
-**Statuts.**
+**Statuses.**
 
-| Résultat | Statut | Pièces |
+| Result | Status | Supporting files |
 |---|---|---|
-| F(z) = conj(z) pour z fini non nul ; contrôle sans étoile = z ; en i : −i et +i ; en 0 : trace +∞, +∞, −∞, 0 | ÉTABLI : preuve courte + juge exact SymPy 1.14.0, sans tolérance (4 PASS, rejoué par Anthony) | `juge_miroir_exact.py`, `CONSOLE_20261120_juge_miroir_exact.txt` |
-| Mesure : 5 013 points jusqu'à \|Im\| = 200, axe négatif et bords ±π compris, écart relatif 7·10⁻⁵¹ | OBSERVÉ (échantillon) | `miroir_global.py`, `CONSOLE_20261119_miroir_global.txt` |
-| Aucun arbre {eml, eml★} à feuilles {1, z} de longueur RPN ≤ 7 ne réalise le miroir : 9 est minimal | CERTIFIÉ par machine (à relire) : les 714 arbres (2 + 8 + 64 + 640) sont encadrés au point rationnel exact z0 = (37 + 61i)/100 en arithmétique d'intervalles ; chacun a une coordonnée de T(z0) − conj(z0) séparée de 0 (713 par la partie réelle, 1 par la partie imaginaire), 0 indécis ; les constantes (zéro, infini, réel négatif) sont décidées exactement par SymPy. Contrôle positif : F reste indécis en z0, comme attendu. L'unique élimination par la partie imaginaire est la feuille z (prédit en relecture : z0 − conj(z0) = 61i/50). Contrôles du code inclus dans le script : 714 arbres produits = 714 distincts = dénombrement (formes de Catalan × feuilles × opérateurs) ; l'intervalle de z0 contient strictement 37/100 et 61/100 (comparaison exacte des bornes binaires) ; la fonction de décision réellement utilisée n'élimine jamais un écart dont les deux intervalles contiennent 0 ; le code de sortie n'est 0 que si les cinq attendus sont vérifiés (714 arbres, 0 indécis, 713 par la partie réelle, la feuille z seule par la partie imaginaire, F non éliminé avec le motif exact) ; une constante dont SymPy ne sait pas décider le signe rend l'arbre indécis au lieu d'interrompre le calcul. Convention : log principal, évaluation étendue. La borne vaut déjà sur ℂ \ {0} (z0 ≠ 0) | `certificat_minimalite.py`, `CONSOLE_20261120_certificat_minimalite.txt` (et `minimalite_miroir.py`, version flottante antérieure) |
-| Corollaire : pour tout compact K ⊂ ℂ, l'algèbre A_K est uniformément dense dans C(K, ℂ) (évaluation étendue si 0 ∈ K ; sinon tout compact de ℂ \ {0}) | DÉRIVÉ, à relire : la feuille donne z, F donne conj(z), continu sur K ; ℂ[z, z̄]\|_K ⊂ A_K et l'argument de Stone–Weierstrass déjà relu s'applique. Ne dépend pas de la minimalité | — |
+| F(z) = conj(z) for finite nonzero z; star-free control = z; at i: −i and +i; at 0: trace +∞, +∞, −∞, 0 | ESTABLISHED: short proof + SymPy 1.14.0 exact judge, without tolerance (4 PASS, replayed by Anthony) | `exact_mirror_judge.py`, `CONSOLE_20261120_exact_mirror_judge.txt` |
+| Measurement: 5,013 points up to \|Im\| = 200, negative axis and boundaries ±π included, relative deviation 7·10⁻⁵¹ | OBSERVED (sample) | `global_mirror.py`, `CONSOLE_20261119_global_mirror.txt` |
+| No {eml, eml★} tree with leaves {1, z} of RPN length ≤ 7 realises the mirror: 9 is minimal | CERTIFIED by machine (to be reviewed): the 714 trees (2 + 8 + 64 + 640) are enclosed at the exact rational point z0 = (37 + 61i)/100 in interval arithmetic; each has one coordinate of T(z0) − conj(z0) separated from 0 (713 by the real part, 1 by the imaginary part), 0 undecided; the constants (zero, infinity, negative real) are decided exactly by SymPy. Positive control: F remains undecided at z0, as expected. The only elimination by the imaginary part is the leaf z (predicted in review: z0 − conj(z0) = 61i/50). Checks of the code included in the script: 714 trees produced = 714 distinct = count (Catalan shapes × leaves × operators); the interval of z0 strictly contains 37/100 and 61/100 (exact comparison of the binary bounds); the decision function actually used never eliminates a deviation whose two intervals both contain 0; the exit code is 0 only if the five expected results are verified (714 trees, 0 undecided, 713 by the real part, the leaf z alone by the imaginary part, F not eliminated with the exact reason); a constant whose sign SymPy cannot decide makes the tree undecided instead of interrupting the computation. Convention: principal log, extended evaluation. The bound already holds on ℂ \ {0} (z0 ≠ 0) | `minimality_certificate.py`, `CONSOLE_20261120_minimality_certificate.txt` (and `mirror_minimality.py`, earlier floating-point version) |
+| Corollary: for every compact K ⊂ ℂ, the algebra A_K is uniformly dense in C(K, ℂ) (extended evaluation if 0 ∈ K; otherwise every compact subset of ℂ \ {0}) | DERIVED, to be reviewed: the leaf gives z, F gives conj(z), continuous on K; ℂ[z, z̄]\|_K ⊂ A_K and the Stone–Weierstrass argument already reviewed applies. Does not depend on minimality | — |
 
-**Comparaison avec l'opérateur ternaire de Quadruplay** (même feuilles z et 1, même convention). Son extraction de Re et
-Im par translation est exacte (vérifié sur 2 000 points). Le témoin ternaire examiné ici (construit par ChatGPT, déplié
-et vérifié sur 313 points) construit la constante i et compte 811 symboles une fois déplié (270 nœuds, 541 feuilles),
-contre 9 pour F. La longueur minimale dans la grammaire ternaire reste indéterminée.
+**Comparison with Quadruplay's ternary operator** (same leaves z and 1, same convention). Its extraction of Re and
+Im by translation is exact (verified on 2,000 points). The ternary witness examined here (built by ChatGPT, fully expanded
+and verified on 313 points) builds the constant i and counts 811 symbols once fully expanded (270 nodes, 541 leaves),
+against 9 for F. The minimal length in the ternary grammar remains undetermined.
 
-**Résultats de la recherche exhaustive** (`recherche_exhaustive_miroir.py`, `recherche_exhaustive_etoile_seule.py`,
-`CONSOLE_20261120_recherche_exhaustive.txt` ; flottants, comparaison en 3 points, tolérance 1e−9 : HEURISTIQUE) :
-- |z|² par un seul arbre de 17 symboles, e(e(1,e(e(e(1,e(e(1,s(1,z)),1)),z),1)),1) (e = eml, s = eml★), mesuré égal à
-  |z|² sur 5 013 points (écart relatif 3·10⁻⁵⁰) ;
-- Re(z), Im(z) et la constante i : aucun arbre jusqu'à la longueur 17 ;
-- eml★ SEUL (sans eml), feuilles {1, z} : ni conj(z), ni Re, Im, −z, 1/z, i jusqu'à la longueur 19 (4,3 millions de
-  fonctions au dernier niveau). Question ouverte : {eml★, 1} est-il à lui seul une base ?
+**Results of the exhaustive search** (`exhaustive_search_mirror.py`, `exhaustive_search_star_only.py`,
+`CONSOLE_20261120_exhaustive_search.txt`; floats, comparison at 3 points, tolerance 1e−9: HEURISTIC):
+- |z|² by a single tree of 17 symbols, e(e(1,e(e(e(1,e(e(1,s(1,z)),1)),z),1)),1) (e = eml, s = eml★), measured equal to
+  |z|² on 5,013 points (relative deviation 3·10⁻⁵⁰);
+- Re(z), Im(z) and the constant i: no tree up to length 17;
+- eml★ ALONE (without eml), leaves {1, z}: neither conj(z), nor Re, Im, −z, 1/z, i up to length 19 (4.3 million
+  functions at the last level). Open question: is {eml★, 1} by itself a basis?
 
-Toujours ouvert : la densité uniforme des arbres INDIVIDUELS (§ 4.3 du manuscrit).
+Still open: the uniform density of INDIVIDUAL trees (§ 4.3 of the manuscript).
 
-## 17. eml★ seule suffit : un miroir strict de 101 symboles (20 novembre 2026) — non relu par un mathématicien
+## 17. eml★ alone suffices: a strict mirror of 101 symbols (20 November 2026) — not reviewed by a mathematician
 
-Ce paragraphe répond à la question laissée ouverte à la fin du § 16 (« {eml★, 1} est-il à lui seul une base ? »).
+This section answers the question left open at the end of § 16 ("is {eml★, 1} by itself a basis?").
 
-**Auteur de la découverte : ChatGPT**, le 20 novembre 2026 (texte `PROOFS.md`, « EML orthogonal-axis study », reçu
-dans l'archive `EML_orthogonal_20261120.zip`). Il a d'abord donné un miroir de 297 symboles, puis, après le retour de
-Claude sur cette longueur, la version de 101 symboles ci-dessous. Anthony Monnerot a rejoué le juge sur son
-ThinkCentre ; Claude a rebâti les arbres indépendamment (sans exécuter le script reçu), les a jugés avec ses propres
-évaluateurs, puis a écrit le vérificateur autonome `miroir_etoile_seule_101.py`, qu'Anthony a rejoué. Aucun mathématicien n'a relu. Aucune antériorité n'a été cherchée.
+**Author of the discovery: ChatGPT**, on 20 November 2026 (text `PROOFS.md`, "EML orthogonal-axis study", received
+in the archive `EML_orthogonal_20261120.zip`). It first gave a mirror of 297 symbols, then, after Claude's feedback
+on that length, the 101-symbol version below. Anthony Monnerot replayed the judge on his
+ThinkCentre; Claude rebuilt the trees independently (without running the script received), judged them with its own
+evaluators, then wrote the standalone verifier `star_only_mirror_101.py`, which Anthony replayed. No mathematician has reviewed it. No prior art has been searched for.
 
-**Énoncé (phrase proposée par ChatGPT).** « Un arbre de 101 symboles en eml★ seule réalise la conjugaison complexe en
-évaluation stricte sur ℂ \ {0}. »
+**Statement (sentence proposed by ChatGPT).**
+"A tree of 101 symbols using eml★ alone computes complex conjugation in strict evaluation on ℂ \ {0}."
 
-*Évaluation stricte* : chaque nœud de l'arbre a une valeur finie (aucun passage par ln 0 = −∞). *eml★ seule* : toutes
-les portes sont eml★, les feuilles sont 1 et z ; l'arbre est compté entièrement déplié, comme au § 16.
+*Strict evaluation*: every node of the tree has a finite value (no passage through ln 0 = −∞). *eml★ alone*: all
+the gates are eml★, the leaves are 1 and z; the tree is counted fully expanded, as in § 16.
 
-**Construction.** On note S = eml★, S(a, b) = exp(a) − Log(conj b), log principal (Arg dans ]−π, π]). Chaque ligne
-est un arbre ; la colonne de droite est la valeur démontrée, pas une syntaxe supplémentaire.
+**Construction.** Write S = eml★, S(a, b) = exp(a) − Log(conj b), principal log (Arg in (−π, π]). Each row
+is a tree; the right-hand column is the proved value, not additional syntax.
 
-| Arbre | Valeur | Symboles |
+| Tree | Value | Symbols |
 |---|---|---|
 | X(t) = S(t, 1) | exp(t) | 3 |
 | C = X(X(1)) | e^e | 5 |
 | O = S(1, C) | 0 | 7 |
 | Q(t) = X(S(1, t)) | C / conj(t), t ≠ 0 | 5 |
-| L(t) = S(1, Q(t)) | e − Log(C/t) : un logarithme de t, exp(L(t)) = t, t ≠ 0 | 7 |
-| d(t, r) = S(L(t), X(r)) | t − r, pour t ≠ 0 et r réel | — |
+| L(t) = S(1, Q(t)) | e − Log(C/t): a logarithm of t, exp(L(t)) = t, t ≠ 0 | 7 |
+| d(t, r) = S(L(t), X(r)) | t − r, for t ≠ 0 and r real | — |
 | n = d(S(1, X(1)), X(1)) | −1 | 17 |
-| k = d(S(O, n), 1) | −iπ (car S(O, n) = 1 − Log(−1) = 1 − iπ) | 35 |
-| h = S(L(k), n) | −2πi : un tour complet | 59 |
-| b = L(h) | un logarithme de h : exp(b) = −2πi | 65 |
-| a = L(S(1, n)) | exp(a) = e − iπ, donc exp(exp(a)) = −C | 25 |
-| P(t) = X(S(a, Q(t))) | −C / conj(Q(t)) = −t, t ≠ 0 : changement de signe | 33 |
+| k = d(S(O, n), 1) | −iπ (since S(O, n) = 1 − Log(−1) = 1 − iπ) | 35 |
+| h = S(L(k), n) | −2πi: a full turn | 59 |
+| b = L(h) | a logarithm of h: exp(b) = −2πi | 65 |
+| a = L(S(1, n)) | exp(a) = e − iπ, hence exp(exp(a)) = −C | 25 |
+| P(t) = X(S(a, Q(t))) | −C / conj(Q(t)) = −t, t ≠ 0: sign change | 33 |
 | **J(z) = X(P(S(b, z)))** | **conj(z), z ≠ 0** | **101** |
 
-**Pourquoi c'est strict sur tout ℂ \ {0}.** L'entrée donnée à P est w = S(b, z) = −2πi − Log(conj z). Sa partie
-imaginaire est dans [−3π, −π[ : w n'est jamais nul, même en z = 1 et sur l'axe réel négatif. Le changement de signe
-est donc licite, et J(z) = exp(−w) = exp(2πi) · conj(z) = conj(z). Les calculs n'utilisent que exp(Log u) = u ; ils
-ne remplacent jamais Log(exp u) par u. C'est le « tour complet » (décaler un logarithme intermédiaire de −2πi, que
-l'exponentielle suivante efface) qui évite le zéro intermédiaire.
+**Why it is strict on all of ℂ \ {0}.** The input given to P is w = S(b, z) = −2πi − Log(conj z). Its imaginary
+part is in [−3π, −π): w is never zero, even at z = 1 and on the negative real axis. The sign change
+is therefore legitimate, and J(z) = exp(−w) = exp(2πi) · conj(z) = conj(z). The computations use only exp(Log u) = u; they
+never replace Log(exp u) by u. It is the "full turn" (shifting an intermediate logarithm by −2πi, which
+the next exponential erases) that avoids the intermediate zero.
 
-**Conséquence : la porte eml reconstruite.** Pour y ≠ 0, eml★(x, J(y)) = exp(x) − Log(conj(conj y)) = eml(x, y) :
-103 symboles. En évaluation stricte, toute porte eml d'un arbre mixte peut donc être remplacée par un montage en
-eml★ seule ; les deux grammaires calculent les mêmes fonctions strictes.
+**Consequence: the eml gate rebuilt.** For y ≠ 0, eml★(x, J(y)) = exp(x) − Log(conj(conj y)) = eml(x, y):
+103 symbols. In strict evaluation, every eml gate of a mixed tree can therefore be replaced by an assembly in
+eml★ alone; the two grammars compute the same strict functions.
 
-| Résultat | Statut | Pièces |
+| Result | Status | Supporting files |
 |---|---|---|
-| Miroir de 297 symboles en eml★ seule (première version, avec un multiplicateur général), J(z) = conj(z) pour z ≠ 0 | ÉTABLI par juge exact : SymPy 1.14.0 sur un symbole complexe non nul et cas particuliers ; encadrements Arb (python-flint 0.9.0) aux points listés ; rejoué par Anthony | `~/EML_replay_20261120_Vw6P7N/` : `replay.py` (sha256 6507109b…), `PROOFS.md` (928217ad…), `replay-console.txt` (ec77fe7a…) |
-| Miroir de 101 symboles : uniquement eml★, feuilles {1, z}, longueur dépliée 101, constantes exactes, identité J(z) = conj(z) sur un symbole complexe non nul et en 9 points exacts (dont −1, −50, e^e), refus strict en 0, eml★(x, J(y)) = eml(x, y), contrôle sans étoile | ÉTABLI par juge exact, deux fois : (1) juge de ChatGPT rejoué par Anthony (sortie « PASS … 297 -> 101 », collée dans la conversation, non archivée en fichier) ; (2) script autonome écrit par Claude sans reprendre ce juge, rejoué par Anthony sur son ThinkCentre : Python 3.12.3, SymPy 1.14.0, 24 contrôles sur 24, code de sortie 0 (trace personnelle `~/EML_101_replay_NSwy5F/`, console sha256 d48f62c4…, identique octet pour octet à celle du dépôt). Ce sont deux implémentations distinctes, toutes deux vérifiées avec SymPy | `miroir_etoile_seule_101.py`, `CONSOLE_20261120_miroir_etoile_seule_101.txt` |
-| Reconstruction indépendante des deux miroirs : 297 et 101 symboles, uniquement eml★, aucun nœud infini ; égalité à conj(z) sur 89 points difficiles (écart < 4·10⁻⁴⁷ ; axe négatif, bords ±π, \|Im\| jusqu'à 100) et en calcul exact SymPy en 5 points dont deux sur l'axe négatif ; refus strict en 0 | OBSERVÉ (échantillon + points exacts) | dossier de travail local `boite_double/` (NON versé au dépôt) : `etoile_seule.py`, `test_boite.py` (37 tests) |
-| Domaine strict = tout ℂ \ {0} (Im w ∈ [−3π, −π[) | DÉRIVÉ : preuve courte ci-dessus, relue par Claude ; à faire relire | ce paragraphe |
-| eml(x, y) = eml★(x, J(y)) pour y ≠ 0 | DÉRIVÉ (une ligne) + juge exact sur des symboles et en 3 points dont y réel négatif (script autonome) | `miroir_etoile_seule_101.py` |
-| Produit strict, partie réelle stricte sur tout le plan (2 489 symboles), porte NAND sur des bits (535 symboles), en eml★ seule | OBSERVÉ sur échantillons (415 couples, 93 points, 4 entrées) ; preuves dans `PROOFS.md`, à relire | dossier local `boite_double/` (non versé), `PROOFS.md` (non versé) |
-| Densité des arbres INDIVIDUELS sur les compacts ; obstruction stricte quand 0 ∈ K et que exp n'est pas injective sur K (exemple K = {0, 2πi}) | NON VÉRIFIÉ ici : preuve écrite de ChatGPT (`PROOFS.md` § 5–6), en attente de relecture indépendante | `PROOFS.md` (non versé au dépôt) |
-| 101 est-il minimal en eml★ seule ? | OUVERT. La recherche exhaustive du § 16 n'a rien trouvé jusqu'à la longueur 19 (heuristique, flottants) : le minimum est donc vraisemblablement entre 21 et 101 | — |
+| Mirror of 297 symbols in eml★ alone (first version, with a general multiplier), J(z) = conj(z) for z ≠ 0 | ESTABLISHED by exact judge: SymPy 1.14.0 on a nonzero complex symbol and special cases; Arb enclosures (python-flint 0.9.0) at the listed points; replayed by Anthony | `~/EML_replay_20261120_Vw6P7N/`: `replay.py` (sha256 6507109b…), `PROOFS.md` (928217ad…), `replay-console.txt` (ec77fe7a…) |
+| Mirror of 101 symbols: eml★ only, leaves {1, z}, fully expanded length 101, exact constants, identity J(z) = conj(z) on a nonzero complex symbol and at 9 exact points (including −1, −50, e^e), strict refusal at 0, eml★(x, J(y)) = eml(x, y), star-free control | ESTABLISHED by exact judge, twice: (1) ChatGPT's judge replayed by Anthony (output "PASS … 297 -> 101", pasted into the conversation, not archived as a file); (2) standalone script written by Claude without reusing that judge, replayed by Anthony on his ThinkCentre: Python 3.12.3, SymPy 1.14.0, 24 checks out of 24, exit code 0 (personal trace `~/EML_101_replay_NSwy5F/`, console sha256 d48f62c4…, byte-for-byte identical to that of the repository). These are two distinct implementations, both verified with SymPy | `star_only_mirror_101.py`, `CONSOLE_20261120_star_only_mirror_101.txt` |
+| Independent reconstruction of the two mirrors: 297 and 101 symbols, eml★ only, no infinite node; equality with conj(z) on 89 hard points (deviation < 4·10⁻⁴⁷; negative axis, boundaries ±π, \|Im\| up to 100) and in exact SymPy computation at 5 points, two of them on the negative axis; strict refusal at 0 | OBSERVED (sample + exact points) | local working directory `double_toolbox/` (NOT committed to the repository): `star_only.py`, `test_toolbox.py` (37 tests) |
+| Strict domain = all of ℂ \ {0} (Im w ∈ [−3π, −π)) | DERIVED: short proof above, reviewed by Claude; to be submitted for review | this section |
+| eml(x, y) = eml★(x, J(y)) for y ≠ 0 | DERIVED (one line) + exact judge on symbols and at 3 points including y negative real (standalone script) | `star_only_mirror_101.py` |
+| Strict product, strict real part on the whole plane (2,489 symbols), NAND gate on bits (535 symbols), in eml★ alone | OBSERVED on samples (415 pairs, 93 points, 4 inputs); proofs in `PROOFS.md`, to be reviewed | local directory `double_toolbox/` (not committed), `PROOFS.md` (not committed) |
+| Density of INDIVIDUAL trees on compact sets; strict obstruction when 0 ∈ K and exp is not injective on K (example K = {0, 2πi}) | NOT VERIFIED here: written proof by ChatGPT (`PROOFS.md` § 5–6), awaiting independent review | `PROOFS.md` (not committed to the repository) |
+| Is 101 minimal in eml★ alone? | OPEN. The exhaustive search of § 16 found nothing up to length 19 (heuristic, floats): the minimum is therefore probably between 21 and 101 | — |
 
-**Précisions de portée.**
-- *En zéro.* Les arbres de ce paragraphe refusent z = 0 en évaluation stricte. Ce n'est pas une impossibilité au seul
-  point 0 (la feuille z y donne la bonne valeur). L'énoncé de ChatGPT, non vérifié ici, est qu'aucun arbre strict ne
-  peut réaliser le miroir à la fois en 0 et en 2πi. Le miroir mixte de 9 symboles du § 16 atteint 0 en évaluation
-  ÉTENDUE.
-- *Le tour complet.* Retirer le décalage −2πi DANS CETTE CONSTRUCTION fait passer l'entrée 1 par ln 0 (contrôle local,
-  non versé). Cela ne prouve pas qu'aucun autre montage ne puisse s'en passer.
-- *Flottants sur la coupure.* En virgule flottante, eml★(x, J(y)) peut différer de eml(x, y) de 2πi quand y est réel
-  négatif (observé en y = −50) : J(y) retombe à 10⁻⁴⁹ près du mauvais côté de l'axe. Le calcul exact donne zéro
-  d'écart. C'est la fragilité numérique déjà signalée sur les bords pour `conjugate_formula` (`eml_toolkit/core.py`), pas un défaut de l'identité.
-- *Les deux miroirs ne répondent pas à la même question.* 9 symboles : le plus court en grammaire mixte, minimal,
-  juste jusqu'en 0 (étendu). 101 symboles : un seul type de porte, strict, hors de 0, minimalité inconnue.
+**Scope clarifications.**
+- *At zero.* The trees of this section refuse z = 0 in strict evaluation. This is not an impossibility at the single
+  point 0 (the leaf z gives the right value there). ChatGPT's statement, not verified here, is that no strict tree
+  can realise the mirror both at 0 and at 2πi. The mixed 9-symbol mirror of § 16 reaches 0 in EXTENDED
+  evaluation.
+- *The full turn.* Removing the −2πi shift IN THIS CONSTRUCTION makes the input 1 pass through ln 0 (local check,
+  not committed). This does not prove that no other assembly could do without it.
+- *Floats on the branch cut.* In floating point, eml★(x, J(y)) can differ from eml(x, y) by 2πi when y is a negative
+  real (observed at y = −50): J(y) falls back, to within 10⁻⁴⁹, on the wrong side of the axis. The exact computation gives zero
+  deviation. This is the numerical fragility already reported at the boundaries for `conjugate_formula` (`eml_toolkit/core.py`), not a defect of the identity.
+- *The two mirrors do not answer the same question.* 9 symbols: the shortest in the mixed grammar, minimal,
+  correct all the way to 0 (extended). 101 symbols: a single type of gate, strict, away from 0, minimality unknown.
 
-Toujours ouvert : la longueur minimale du miroir en eml★ seule ; la relecture de la preuve de densité ; une relecture
-humaine de l'ensemble.
+Still open: the minimal length of the mirror in eml★ alone; the review of the density proof; a human
+review of the whole.

@@ -1,0 +1,79 @@
+Exhaustive search (night of 19 to 20 November 2026), values at 3 points of the strip, tolerance 1e-9, doubles.
+Summary written from the raw outputs of the two scripts (raw outputs not kept; rerun the scripts to
+reproduce them: about 8 minutes each).
+
+[A] exhaustive_search_mirror.py: operators eml (e) and eml★ (s), leaves {1, z}
+   2 leaves (RPN length 3): 6 new functions
+   3 leaves (RPN length 5): 36 new functions
+   4 leaves (RPN length 7): 267 new functions
+   5 leaves (RPN length 9): 2216 new functions; found: conj(z)
+   6 leaves (RPN length 11): 19569 new functions
+   7 leaves (RPN length 13): 181162 new functions
+   8 leaves (RPN length 15): 1737826 new functions
+   9 leaves (RPN length 17): 17114283 new functions (495 s)
+   conj(z)      : FOUND, 5 leaves, RPN length 9: e(1,e(s(1,e(z,1)),1))
+   Re(z)        : not found (up to length 17)
+   Im(z)        : not found (up to length 17)
+   |z|^2        : FOUND, 9 leaves, RPN length 17: e(e(1,e(e(e(1,e(e(1,s(1,z)),1)),z),1)),1)
+   -z           : FOUND, 8 leaves, RPN length 15: e(e(1,e(1,e(1,e(e(1,1),1)))),e(z,1))
+   1 - z        : FOUND, 6 leaves, RPN length 11: e(e(1,e(e(1,1),1)),e(z,1))
+   1 - conj(z)  : FOUND, 6 leaves, RPN length 11: s(e(1,e(e(1,1),1)),e(z,1))
+   -conj(z)     : FOUND, 8 leaves, RPN length 15: s(e(1,e(1,e(1,e(e(1,1),1)))),e(z,1))
+   i            : not found (up to length 17)
+   Note: the search keeps the first tree found for each function (compared at 3 points of the strip). The tree
+   displayed for conj(z) ends with a log and is correct only in the strip; the global tree F of the same length,
+   e(e(1,e(s(1,z),1)),1), has the same values at these points and was therefore discarded as a duplicate.
+   None of the 2 + 6 + 36 + 267 functions of length ≤ 7 is equal to conj(z) at these points: 9 is the minimal length.
+
+[B] exhaustive_search_star_only.py: operator eml★ ALONE, leaves {1, z}, up to 10 leaves (length 19,
+    4 333 243 new functions at the last level, 484 s)
+   found: 0 (length 7), ln z (length 7), z − 1 (length 11)
+   not found up to length 19: conj(z), Re(z), Im(z), −z, 1 − z, 1/z, i, |z|²
+
+----------------------------------------------------------------------------------------------------------------
+Appendix added when the scripts were translated into English (2026-11-20): raw standard output of a re-run of the
+two renamed scripts (exit code 0 for both). The function counts, the trees and the found / not found lists are the
+same as in the summary above; only the timings differ.
+
+$ python exhaustive_search_mirror.py
+   2 leaves (RPN length 3): 6 new functions, 0 s; found: []
+   3 leaves (RPN length 5): 36 new functions, 0 s; found: []
+   4 leaves (RPN length 7): 267 new functions, 0 s; found: []
+   5 leaves (RPN length 9): 2216 new functions, 0 s; found: ['conj(z)']
+   6 leaves (RPN length 11): 19569 new functions, 1 s; found: ['1 - conj(z)', '1 - z', 'conj(z)']
+   7 leaves (RPN length 13): 181162 new functions, 7 s; found: ['1 - conj(z)', '1 - z', 'conj(z)']
+   8 leaves (RPN length 15): 1737826 new functions, 63 s; found: ['-conj(z)', '-z', '1 - conj(z)', '1 - z', 'conj(z)']
+   9 leaves (RPN length 17): 17114283 new functions, 500 s; found: ['-conj(z)', '-z', '1 - conj(z)', '1 - z', 'conj(z)', '|z|^2']
+   conj(z)      : FOUND, 5 leaves, RPN length 9: e(1,e(s(1,e(z,1)),1))
+   Re(z)        : not found
+   Im(z)        : not found
+   |z|^2        : FOUND, 9 leaves, RPN length 17: e(e(1,e(e(e(1,e(e(1,s(1,z)),1)),z),1)),1)
+   -z           : FOUND, 8 leaves, RPN length 15: e(e(1,e(1,e(1,e(e(1,1),1)))),e(z,1))
+   1 - z        : FOUND, 6 leaves, RPN length 11: e(e(1,e(e(1,1),1)),e(z,1))
+   1 - conj(z)  : FOUND, 6 leaves, RPN length 11: s(e(1,e(e(1,1),1)),e(z,1))
+   -conj(z)     : FOUND, 8 leaves, RPN length 15: s(e(1,e(1,e(1,e(e(1,1),1)))),e(z,1))
+   i            : not found
+
+$ python exhaustive_search_star_only.py
+1) Quadruplay: worst deviation on Re and Im, 2000 points up to |Im| = 50: 0 | eml3(x, y, 1) − eml(x, y) = 0.0
+   2 leaves (RPN length 3): 4 new functions, 0 s; found so far: []
+   3 leaves (RPN length 5): 16 new functions, 0 s; found so far: []
+   4 leaves (RPN length 7): 80 new functions, 0 s; found so far: ['0', 'ln z']
+   5 leaves (RPN length 9): 440 new functions, 0 s; found so far: ['0', 'ln z']
+   6 leaves (RPN length 11): 2579 new functions, 0 s; found so far: ['0', 'ln z', 'z - 1']
+   7 leaves (RPN length 13): 15776 new functions, 2 s; found so far: ['0', 'ln z', 'z - 1']
+   8 leaves (RPN length 15): 100055 new functions, 12 s; found so far: ['0', 'ln z', 'z - 1']
+   9 leaves (RPN length 17): 651958 new functions, 77 s; found so far: ['0', 'ln z', 'z - 1']
+   10 leaves (RPN length 19): 4333243 new functions, 513 s; found so far: ['0', 'ln z', 'z - 1']
+2) eml★ alone, leaves {1, z}, s(a,b) = eml★(a,b):
+   conj(z)  : not found in the search
+   Re(z)    : not found in the search
+   Im(z)    : not found in the search
+   -z       : not found in the search
+   1 - z    : not found in the search
+   i        : not found in the search
+   0        : FOUND at 4 leaves: s(1,s(s(1,1),1))
+   ln z     : FOUND at 4 leaves: s(1,s(s(1,z),1))
+   z - 1    : FOUND at 6 leaves: s(s(1,s(s(1,z),1)),s(1,1))
+   1/z      : not found in the search
+   |z|^2    : not found in the search

@@ -1,0 +1,8 @@
+1) F(z) = eml(eml(1, eml(eml★(1, z), 1)), 1), 9 symbols
+    5013 points, |Im| up to 200, negative real axis and edges ±π included: worst relative deviation from conj(z) = 6.89e-51
+    F(0) with extended evaluation = 0.0 | nodes at 0: +inf +inf -inf
+2) check, same shape without the star: worst relative deviation from z = 6.89e-51 | and from conj(z), off the real axis: 2.0
+3) tree found by the search, eml(1, eml(eml★(1, eml(z, 1)), 1)): in the strip, 86 points, worst absolute deviation = 1.34e-51 | outside the strip, 4897 points, smallest deviation = 6.283
+4) |z|² in 17 symbols: worst relative deviation = 3.42e-50 | max imaginary part / value = 1.07e-50
+5) ternary witness G: 270 T nodes, 541 leaves, unfolded length 811; constructed i = (-5.85087728895e-51 + 1.0j)
+   G(z) against conj(z), 313 points, |Im| up to 50: worst absolute deviation = 7.53e-46

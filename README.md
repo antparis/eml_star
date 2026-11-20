@@ -51,7 +51,7 @@ for the record (superseded).
 - **× tree:** with the principal branch, E_mul(x, y) = x·y for all nonzero x, y; no condition on
   imaginary parts. The value does not change when the branch of a logarithm *whose argument depends
   on x or y* is moved. This is **not** true of the logarithms of constants: taking ln 1 = 2πi in the
-  root node alone shifts the result by exactly −2πi (`branches_autorisees.py`).
+  root node alone shifts the result by exactly −2πi (`allowed_branches.py`).
 - **+ tree:** with the principal branch, E_add(x, y) = x + ỹ, where ỹ is y reduced modulo 2πi to
   Im ∈ [−π, π). So E_add(x, y) = x + y exactly when Im y ∈ [−π, π); the condition is on y only.
   (E_add(x, iπ) = x − iπ.)
@@ -77,7 +77,7 @@ logarithms of constants untouched; 4000 points, 80 digits):
 Reproduce (each command prints the six certificates of the table and exits with a non-zero status if
 one fails): `python3 certify_branch_safety.py` (about 3 minutes), `cd julia_check && julia --project=. certify.jl`.
 Decimal bounds are rounded outward and the excluded disc is tested with guaranteed arithmetic.
-Branch checks: `python3 mur_et_infini.py`, `python3 branches_autorisees.py`. Full report: `FINDINGS_20261119_branch_safety_certificate.md`.
+Branch checks: `python3 wall_and_infinity.py`, `python3 allowed_branches.py`. Full report: `FINDINGS_20261119_branch_safety_certificate.md`.
 
 > **Tree sizes.** The trees used and tested in this repository have RPN length 27 for + (13 eml
 > nodes) and 41 for × (20 eml nodes). These lengths coincide with the "EML Compiler" column of
@@ -131,7 +131,7 @@ Both bases are valid. The choice depends on the intended application.
 | `branch_safety_final.py` | May 2026 point test of the + and × trees (checks final values only; superseded) |
 | `certify_branch_safety.py`, `test_certify_branch_safety.py` | Interval-arithmetic certificate (two-doors rule) and its tests |
 | `julia_check/certify.jl` | Independent Julia re-implementation of the certificate |
-| `mur_et_infini.py`, `miroir_et_mur.py`, `branches_autorisees.py` | Branch checks of the ×, + and conjugation formulas (which logarithms may move) |
+| `wall_and_infinity.py`, `mirror_and_wall.py`, `allowed_branches.py` | Branch checks of the ×, + and conjugation formulas (which logarithms may move) |
 | `FINDINGS_20261119_branch_safety_certificate.md` | Full report of the November 2026 correction |
 | `emlstar_engine.py` | Complete eml★ verification engine |
 | `verify_theorem4.py` | Numerical verification of Theorem 4.3 |

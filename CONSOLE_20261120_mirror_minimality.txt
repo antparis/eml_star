@@ -1,0 +1,4 @@
+Trees of RPN length ≤ 7 enumerated: 714 (of which 0 infinite or undefined at z0 = (0.37 + 0.61j))
+Smallest deviation from conj(z0): 0.266964, attained by ('eml', 'z', ('eml★', 'z', ('eml★', 'z', 'z')))
+Check, the 9-symbol tree at z0: deviation 8.7e-62
+CONCLUSION: no tree of length ≤ 7 realizes conj; 9 is minimal

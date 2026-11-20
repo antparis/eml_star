@@ -1,0 +1,15 @@
+Check 1, generator: 714 trees produced, 714 distinct, counting formula 714
+Check 2, enclosure: the interval of z0 strictly contains 37/100 and 61/100 (exact comparison in rationals)
+Check 3, rule (the function separated_from_zero, the one judge uses): a deviation whose two intervals both contain 0, even at the edge, is NOT eliminated; a single interval strictly separated from 0 suffices
+z0 = (37 + 61 i)/100 exact; trees enumerated: 714; by RPN length: {1: 2, 3: 8, 5: 64, 7: 640}
+      1 × eliminated (imaginary part of T(z0) − conj(z0) separated from 0)
+    713 × eliminated (real part of T(z0) − conj(z0) separated from 0)
+UNDECIDED: 0
+Tree(s) eliminated by the imaginary part: ['z'] (predicted in review: the leaf z alone, since z0 − conj(z0) = 61i/50)
+Positive check, the 9-symbol tree F: UNDECIDED (both intervals contain 0) (required: "both intervals contain 0", since it is exactly equal to conj(z0))
+   [OK] 714 trees enumerated
+   [OK] 0 undecided
+   [OK] 713 eliminated by the real part
+   [OK] only the leaf z eliminated by the imaginary part
+   [OK] positive check F not eliminated, exact reason
+CONCLUSION: 714 trees eliminated, 0 undecided: no tree of RPN length ≤ 7 realizes the mirror; 9 is minimal.

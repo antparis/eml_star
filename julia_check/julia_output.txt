@@ -1,0 +1,8 @@
+Refusal checks: passed. Sizes: E_add 27, E_mul 41
+1) x + y, x,y ∈ [0.1,3]+i[−1,1]: CERTIFIED — 1 boxes, 0 absorbed crossings, 0 in the disc, depth 0, 0.0 s
+2) x × y (original tree), same domain, outside |x−1| < 0.05: CERTIFIED — 75592 boxes, 22784 absorbed crossings, 98304 in the disc, depth 7, 47.2 s
+3) x × y (lemma form), same domain, disc included: CERTIFIED — 16 boxes, 0 absorbed crossings, 0 in the disc, depth 1, 0.0 s
+4) x + y on [−3,3]+i[−3,3] with |Re|,|Im| < 0.1 removed: CERTIFIED — 2056 boxes, 584 absorbed crossings, depth 2
+5) x × y (lemma form) on [−3,3]+i[−3,3] with |Re|,|Im| < 0.1 removed: CERTIFIED — 256 boxes, 400 absorbed crossings, depth 1
+6) x + y (lemma form) on the full square [−3,3]+i[−3,3], zero included: CERTIFIED — 256 boxes, 0 absorbed crossings, 0 in the disc, depth 2, 0.0 s
+The six expected certificates passed.
