@@ -6,6 +6,27 @@
 
 ---
 
+## November 2026 update — where to look
+
+None of the November 2026 material has yet been reviewed by a human mathematician. Large language models were used
+for derivations, verification code and translation; see the AI-use disclosure in `docs/PROJECT_SUMMARY.md`, section 8.
+
+| Result | Status | Where |
+|---|---|---|
+| The published "no branch-cut crossing" claim for the + and × trees was wrong; exact formulas and interval certificates replace it | corrected, machine-certified on stated domains | report §1–15: [`FINDINGS_20261119_branch_safety_certificate.md`](FINDINGS_20261119_branch_safety_certificate.md); `certify_branch_safety.py`; `julia_check/` |
+| A 9-symbol tree in {eml, eml★, 1} computes conj(z) on ℂ \ {0} (and at 0 in extended evaluation); 9 is minimal | exact proof + exact judge; minimality machine-certified | report §16; `exact_mirror_judge.py`, `minimality_certificate.py` |
+| eml★ alone suffices: a 101-symbol tree using eml★ as its only gate computes conj(z) in strict evaluation on ℂ \ {0}; hence eml(x, y) = eml★(x, J(y)) in 103 symbols | found by ChatGPT; exact judge (SymPy), two separately written implementations; domain argument to be reviewed; minimality open | report §17; standalone verifier [`star_only_mirror_101.py`](star_only_mirror_101.py), output `CONSOLE_20261120_star_only_mirror_101.txt` |
+| NAND / EML double toolbox: the eml brick built from NAND gates, wall-free recipes (logarithm, addition), interval certificates | measured; certificates give 11 expected verdicts out of 11 on stated domains; not reviewed | [`double_toolbox/`](double_toolbox/README.md), output `double_toolbox/CONSOLE_certificates_20261120.txt` |
+
+Reproduce (Python 3.12, `pip install -r requirements.txt`):
+
+    python3 star_only_mirror_101.py            # 24 checks, exit code 0
+    python3 -m pytest -q eml_toolkit test_certify_branch_safety.py test_allowed_branches.py double_toolbox
+    python3 certify_branch_safety.py           # about 3 minutes
+    python3 -m double_toolbox.certificates     # about 20 minutes
+
+---
+
 ## Background
 
 Odrzywołek (2026) showed that a single binary operator  
@@ -132,7 +153,12 @@ Both bases are valid. The choice depends on the intended application.
 | `certify_branch_safety.py`, `test_certify_branch_safety.py` | Interval-arithmetic certificate (two-doors rule) and its tests |
 | `julia_check/certify.jl` | Independent Julia re-implementation of the certificate |
 | `wall_and_infinity.py`, `mirror_and_wall.py`, `allowed_branches.py` | Branch checks of the ×, + and conjugation formulas (which logarithms may move) |
-| `FINDINGS_20261119_branch_safety_certificate.md` | Full report of the November 2026 correction |
+| `FINDINGS_20261119_branch_safety_certificate.md` | Full report of the November 2026 work (§1–15 correction, §16 nine-symbol mirror, §17 eml★ alone) |
+| `exact_mirror_judge.py`, `global_mirror.py`, `mirror_minimality.py`, `minimality_certificate.py` | The 9-symbol mirror: exact judge, measurements, minimality certificate |
+| `star_only_mirror_101.py` | Standalone SymPy verifier of the 101-symbol mirror in eml★ alone |
+| `exhaustive_search_mirror.py`, `exhaustive_search_star_only.py`, `orthogonal_axis.py` | Heuristic exhaustive searches; script of report §8 |
+| `double_toolbox/` | NAND / EML toolbox: eml brick in NAND gates, wall-free recipes, certificates (see its README) |
+| `CONSOLE_*.txt`, `REPLAY_*.txt` | Recorded outputs of the scripts |
 | `emlstar_engine.py` | Complete eml★ verification engine |
 | `verify_theorem4.py` | Numerical verification of Theorem 4.3 |
 | `eml_toolkit/core.py` | eml, eml★, arithmetic trees, conjugate_formula (corrected November 2026; tests in `test_core.py`) |

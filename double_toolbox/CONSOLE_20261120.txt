@@ -1,0 +1,100 @@
+.....................................                                    [100%]
+37 passed in 26.20s
+
+=== The two worlds at the same time: 13 and 11 ===
+
+world  operation           result  correct   bricks symbols without sharing
+NAND   addition                24  yes           68                   1,551
+EML    addition              24.0  yes           13                      27
+NAND   multiplication         143  yes          600      26,224,985,594,496
+EML    multiplication       143.0  yes           20                      41
+
+=== The same sine on both sides: sin(1) ===
+
+NAND        0.8414306640625  correct  error   4.0e-5  bricks  12582  symbols without sharing 2.4e+101
+EML       0.841470984807897  correct  error  3.5e-51  bricks    131  symbols without sharing 1,099
+  (NAND: 20 bits of which 13 after the point; its error is counted relative to the angle rounded to its bits)
+
+=== The same sine on both sides: sin(3) ===
+
+NAND          0.14111328125  correct  error   6.7e-6  bricks  12582  symbols without sharing 2.4e+101
+EML       0.141120008059867  correct  error  3.4e-51  bricks    131  symbols without sharing 1,099
+  (NAND: 20 bits of which 13 after the point; its error is counted relative to the angle rounded to its bits)
+
+=== The same sine on both sides: sin(-50) ===
+
+NAND         0.262451171875  correct  error   7.6e-5  bricks  12582  symbols without sharing 2.4e+101
+EML       0.262374853703929  correct  error  8.6e-50  bricks    131  symbols without sharing 1,099
+  (NAND: 20 bits of which 13 after the point; its error is counted relative to the angle rounded to its bits)
+
+=== Before / after: the walls lifted ===
+
+  NAND bare     sin(3)   =   0.984497   WRONG (true: 0.14112)  → with folding: 0.141113
+  EML short     ln(−2)   =  (0.693147 - 3.14159j)   WRONG  → wall-free: (0.693147 + 3.14159j)   (true: (0.693147 + 3.14159j))
+  EML short     √(−4)    =           (0.0 - 2.0j)   WRONG  → wall-free: (0.0 + 2.0j)   (true: (0.0 + 2.0j))
+  EML short     sin(1+3i)= (-0.953133 + 5.41268j)   WRONG  → wall-free: (8.47165 + 5.41268j)   (true: (8.47165 + 5.41268j))
+  EML short     1 + 4i   =       (1.0 - 2.28319j)   WRONG  → wall-free: (1.0 + 4.0j)
+
+=== The eml★ mirror (9 symbols) and what it makes possible ===
+
+  mirror((3.0 + 4.0j)) = (3.0 - 4.0j)
+  mirror((-2.0 + 40.0j)) = (-2.0 - 40.0j)
+  mirror(-5.0) = -5.0
+  mirror(0.0) = 0.0
+  |3 + 4i| = 5.0   (147 symbols)
+
+=== Constants built with eml and 1 only ===
+
+  i = (0.0 + 1.0j)   (143 symbols, exact)
+  π = 3.14159265358979   (217 symbols, exact)
+
+=== EML recipes: the short one (with its wall) and the wall-free one ===
+
+  addition        short:    27 symbols — correct if |Im y| < π
+                  safe :   131 symbols — correct on all measured points; holes: x = 0 or y = 0 (refusal)
+  subtraction     short:    11 symbols — correct if |Im y| < π
+                  safe :   243 symbols — correct on all measured points; holes: x = 0 or y = 0 (refusal)
+  total addition  short:    27 symbols — correct if |Im y| < π
+                  safe :  1029 symbols — correct on all measured points, zero included
+  multiplication  short:    41 symbols — correct for all nonzero x, y
+  logarithm       short:     7 symbols — wrong on the negative reals (−iπ instead of +iπ)
+                  safe :    23 symbols — correct on all measured points (z nonzero)
+  square root     short:    99 symbols — wrong on the negative reals
+                  safe :   115 symbols — correct on all measured points (z nonzero)
+  sine            short:   667 symbols — correct on the real axis; complex: only if |Im x| < ln π ≈ 1.14
+                  safe :  1099 symbols — correct on the whole measured complex grid
+  cosine          short:   501 symbols — same zone as the short sine
+                  safe :   805 symbols — correct on the whole measured complex grid
+  real part       short:   125 symbols — correct if |Im z| < π
+                  safe :   149 symbols — correct on all measured points
+  mirror          short:     9 symbols — correct everywhere, 9 symbols (proved exactly, minimum)
+
+  In a hole (0), the tool refuses (Undefined error) instead of returning a wrong result.
+
+=== NAND side: what the precision of the sine costs (folded angle, whole range) ===
+
+   bits   after the point    gates  worst error   in units of the last bit
+     12                 9     7081      0.00096                       0.49
+     16                13    11380       6.1e-5                        0.5
+     24                21    22996       2.9e-7                       0.61
+     32                29    38557       2.1e-9                        1.1
+
+=== The eml brick itself, built in NAND gates ===
+
+  eml(1.0, 1.0) =                   2.718277   true 2.7182818   error 4.9e-6
+  eml((1.0 + 2.0j), (3.0 + 4.0j)) =  (-2.7406464 + 1.5444336j)   true (-2.7406423 + 1.5444315j)   error 4.6e-6
+  eml(2.0, -3.0) =   (6.2904358 - 3.1415863j)   true (6.2904438 - 3.1415927j)   error 1.0e-5
+  → one eml brick = 77,633 NAND gates in 26 bits (10 before the point, 16 after); 72,513 in 24 bits (8 + 16)
+
+=== Closing the loop: EML trees computed only with this NAND brick ===
+
+  ln(2)         =               0.69314575   error   1.4e-6     3 bricks × 77,633 =    232,899 gates
+  5 + 3         =                 7.999939   error   6.1e-5     7 bricks × 77,633 =    543,431 gates
+  13 × 11       = (142.99063 + 7.6293945e-5j)   error   0.0094    14 bricks × 77,633 =  1,086,862 gates
+  √2            =                1.4142151   error   1.5e-6    12 bricks × 77,633 =    931,596 gates
+  mirror(3+4i)  =  (3.000061 - 4.0000458j)   error   7.6e-5     4 bricks × 77,633 =    310,532 gates
+  sin(1)        = (0.84147644 + 1.5258789e-5j)   error   1.6e-5    24 bricks × 77,633 =  1,863,192 gates
+  For comparison, in direct NAND: addition 68 gates, multiplication 600, sine 12,582.
+  Limit: no saturation — a tree in which an intermediate number exceeds ±512 overflows and returns a wrong result.
+  (Same 26-bit brick everywhere; the constants are precomputed; −∞ = the smallest writable number.)
+

@@ -1,0 +1,23 @@
+
+— Wall-free logarithm: ln_exact(z) = mirror(ln(mirror z)) —
+[OK] ln_exact above, below and to the right of the negative axis, outside the disc |z − 1| < 0.05 (23 symbols): CERTIFIED with no jump — 190 boxes, 92 absorbed crossings, 8 boxes excluded (disc), 48 witnesses (worst gap 5.98e-51), 0.3 s
+[OK] ln_exact ON the negative axis (must equal ln|z| + iπ), exact computation (SymPy): 4/4 points correct
+[OK] ln_exact at z = 1 (center of the excluded disc; passes through ln 0 = −∞), exact computation (SymPy): 1/1 points correct
+[OK] control: the short ln, for its part, is wrong on the axis at 4/4 points
+
+— Wall-free addition: add_safe(x, y) = y × (x/y + 1), on domains where x, y and x + y stay far from 0 —
+[OK] add_safe, y up to ±8i (well beyond the wall ±πi) (131 symbols): CERTIFIED with no jump — 41914 boxes, 18693 absorbed crossings, 0 boxes excluded (disc), 144 witnesses (worst gap 7.71e-50), 108.5 s
+
+— Negative controls (they MUST fail) —
+[OK] SHORT addition straddling the wall Im y = π (27 symbols): not certified — 4 boxes, 5 absorbed crossings, 0 boxes excluded (disc), 0 witnesses (worst gap 0.0), 0.0 s
+       reason: branch-cut crossing in a − ln c (node -ln(x, eml(-ln(eml(1, eml(eml(1, 1), 1)), eml(y, 1)), 1))); box {'x': [2.875, 3.0] + i[2.625, 3.0], 'y': [2.84375, 3.0] + i[3.125, 3.25]}
+[OK] SHORT addition beyond the wall (no jump, but wrong value: it is the witness that unmasks it): no jump = True, gap at the witnesses = 6.2831853 (= 2π)
+
+— Total addition (orthogonal axis): add_total(x, y) = i(−ix + Im y) + Re y —
+[OK] piece 1: wall-free real part, four quadrants up to ±8i (149 symbols): CERTIFIED with no jump — 16138 boxes, 22996 absorbed crossings, 0 boxes excluded (disc), 64 witnesses (worst gap 1.1e-50), 75.0 s
+[OK] piece 2: imaginary part, four quadrants up to ±8i (481 symbols): CERTIFIED with no jump — 61012 boxes, 87844 absorbed crossings, 0 boxes excluded (disc), 64 witnesses (worst gap 3.65e-50), 999.3 s
+[OK] whole tree, small domain beyond the wall (Im y between 5 and 5.125) (1029 symbols): CERTIFIED with no jump — 256 boxes, 0 absorbed crossings, 0 boxes excluded (disc), 36 witnesses (worst gap 3.02e-50), 7.0 s
+[OK] add_total at the points at zero or on the axes (where the intervals see nothing), exact computation (SymPy): 7/7 points correct
+
+SUMMARY: 11/11 expected verdicts obtained.
+exit code 0
