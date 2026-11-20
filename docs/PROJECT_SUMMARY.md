@@ -218,7 +218,8 @@ Attribution of the November 2026 results:
 - Claude independently reconstructed the 101-symbol tree and wrote a
   standalone SymPy verifier (miroir_etoile_seule_101.py).
 - The branch-safety correction (interval certificates, corrected statements,
-  the FINDINGS report) was written with Claude and reviewed by ChatGPT.
+  the FINDINGS report) was written with Claude. ChatGPT reviewed selected
+  derivations and verification outputs; this was not a full audit.
 
 None of the November 2026 material has yet been reviewed by a human
 mathematician.
