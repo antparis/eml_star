@@ -1,6 +1,6 @@
 # Branch-safety certificate for the + and × trees — 2026-11-19
 
-*Translated from French on 2026-11-20. The French original is in the repository history at revision 365d88d. The scripts were translated at the same time (comments, messages, identifiers, file names) and re-run: the console files of this version come from the English scripts and carry the same numbers as the French runs, wall-clock timings aside (timings quoted in this report are those of the original runs). Replays attributed to Anthony Monnerot below were made on the French-language versions, at or before revision c074e6a.*
+*Translated from French on 2026-11-20. The French original is in the repository history at revision 365d88d. The scripts were translated at the same time (comments, messages, identifiers, file names) and re-run: the console files of this version come from the English scripts and carry the same numbers as the French runs, wall-clock timings aside (timings quoted in this report are those of the original runs). Replays attributed to Anthony Monnerot below were made on the French-language versions, at or before revision c074e6a. Addition of 2026-11-20: he also replayed the English `star_only_mirror_101.py` on his machine at published revision dbbf39c — 24/24 checks, exit code 0 (Python 3.12.3, SymPy 1.14.0); the other English scripts have not been replayed by him.*
 
 Files: `certify_branch_safety.py` (certificate), `test_certify_branch_safety.py` (26 tests).
 Nothing was modified in the paper, the README or the existing scripts; nothing was pushed to GitHub.
