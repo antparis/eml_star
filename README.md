@@ -95,7 +95,8 @@ Random-branch check (a random multiple of 2πi added to every logarithm with a v
 logarithms of constants untouched; 4000 points, 80 digits):
 × equals x·y to 6·10⁻⁷⁹; + equals x + y up to an integer multiple of 2πi.
 
-Reproduce (each command prints the six certificates of the table and exits with a non-zero status if
+Reproduce (each command prints six certificates — the four of the table, plus + on [0.1, 3] + i[−1, 1] and × with the
+absorption lemma on [−3, 3] + i[−3, 3] minus |Re|, |Im| < 0.1 — and exits with a non-zero status if
 one fails): `python3 certify_branch_safety.py` (about 3 minutes), `cd julia_check && julia --project=. certify.jl`.
 Decimal bounds are rounded outward and the excluded disc is tested with guaranteed arithmetic.
 Branch checks: `python3 wall_and_infinity.py`, `python3 allowed_branches.py`. Full report: `FINDINGS_20261119_branch_safety_certificate.md`.
