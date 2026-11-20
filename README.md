@@ -124,6 +124,13 @@ reduced modulo 2πi (its real part is always exact).
   z̄ = 2 Re(z) − z, |z|² exact everywhere on ℂ.  
   Note: Re is a unary operator — breaks the uniform binary grammar.
 
+> **November 2026 update.** The strip restriction belongs to the short formula of Th. 3.1, not to the basis
+> {eml, eml★, 1} itself: a 9-symbol tree in that basis computes z̄ on ℂ \ {0}, and at 0 in extended evaluation
+> (report §16). The uniform binary grammar therefore also reaches z̄ without strip restriction, with a longer
+> tree and with z = 0 handled only in extended evaluation. Status: exact proof and exact judge, minimality
+> machine-certified, not yet reviewed by a human mathematician. {eml, Re, 1} remains the shorter route when a
+> unary operator is acceptable.
+
 Both bases are valid. The choice depends on the intended application.
 
 ---
@@ -189,7 +196,8 @@ certifying the holomorphic / anti-holomorphic verdict via the
 Wirtinger derivative ∂f/∂z̄, and a synthetic test battery with
 judge-certified ground truth.
 
-Software archive: Zenodo DOI 10.5281/zenodo.20152989
+Software archive (Zenodo): all versions https://doi.org/10.5281/zenodo.20152988 — latest v0.4.0 (2026-05-18);
+version of 2026-05-13: 10.5281/zenodo.20152989.
 
 ## License
 
@@ -205,6 +213,11 @@ Sheffer Operator. Extension of Odrzywołek (arXiv:2603.21852v2).
 GitHub: https://github.com/antparis/eml_star
 Zenodo: https://doi.org/10.5281/zenodo.20102448
 ```
+
+The DOI above is the version of 2026-05-10. All versions: https://doi.org/10.5281/zenodo.20091022, which resolves to
+the latest one (Version 8, 2026-05-20, retitled *Detecting anti-holomorphic dynamics via symbolic regression with the
+eml★ operator*). No Zenodo version contains the November 2026 correction yet: for the withdrawn claim and the new
+results, this repository is the reference.
 
 
 ## EML-WM — EML World Model (Prototype)
