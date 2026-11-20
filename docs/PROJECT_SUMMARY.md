@@ -205,7 +205,20 @@ These are compiler-style constructions (Odrzywołek's Section 4.1).
 
 ## 8. AI USE DISCLOSURE
 
-Large language models were used for adversarial auditing of mathematical
-statements, code review, and language editing. The mathematical results,
-the eml★ operator definition, the proofs, and the numerical verifications
-are the author's own work.
+Large language models were used throughout this project: for adversarial
+auditing of mathematical statements, code review and language editing, and,
+from November 2026, for derivations and for writing verification code.
+
+Attribution of the November 2026 results:
+
+- Anthony Monnerot proposed the companion operator eml★.
+- ChatGPT derived the nine-symbol mixed-gate mirror and the 101-symbol
+  pure-eml★ mirror.
+- Anthony ran the exact symbolic checks on his ThinkCentre.
+- Claude independently reconstructed the 101-symbol tree and wrote a
+  standalone SymPy verifier (miroir_etoile_seule_101.py).
+- The branch-safety correction (interval certificates, corrected statements,
+  the FINDINGS report) was written with Claude and reviewed by ChatGPT.
+
+None of the November 2026 material has yet been reviewed by a human
+mathematician.

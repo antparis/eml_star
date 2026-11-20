@@ -349,3 +349,75 @@ contre 9 pour F. La longueur minimale dans la grammaire ternaire reste indéterm
   fonctions au dernier niveau). Question ouverte : {eml★, 1} est-il à lui seul une base ?
 
 Toujours ouvert : la densité uniforme des arbres INDIVIDUELS (§ 4.3 du manuscrit).
+
+## 17. eml★ seule suffit : un miroir strict de 101 symboles (20 novembre 2026) — non relu par un mathématicien
+
+Ce paragraphe répond à la question laissée ouverte à la fin du § 16 (« {eml★, 1} est-il à lui seul une base ? »).
+
+**Auteur de la découverte : ChatGPT**, le 20 novembre 2026 (texte `PROOFS.md`, « EML orthogonal-axis study », reçu
+dans l'archive `EML_orthogonal_20261120.zip`). Il a d'abord donné un miroir de 297 symboles, puis, après le retour de
+Claude sur cette longueur, la version de 101 symboles ci-dessous. Anthony Monnerot a rejoué le juge sur son
+ThinkCentre ; Claude a rebâti les arbres indépendamment (sans exécuter le script reçu), les a jugés avec ses propres
+évaluateurs, puis a écrit le vérificateur autonome `miroir_etoile_seule_101.py`, qu'Anthony a rejoué. Aucun mathématicien n'a relu. Aucune antériorité n'a été cherchée.
+
+**Énoncé (phrase proposée par ChatGPT).** « Un arbre de 101 symboles en eml★ seule réalise la conjugaison complexe en
+évaluation stricte sur ℂ \ {0}. »
+
+*Évaluation stricte* : chaque nœud de l'arbre a une valeur finie (aucun passage par ln 0 = −∞). *eml★ seule* : toutes
+les portes sont eml★, les feuilles sont 1 et z ; l'arbre est compté entièrement déplié, comme au § 16.
+
+**Construction.** On note S = eml★, S(a, b) = exp(a) − Log(conj b), log principal (Arg dans ]−π, π]). Chaque ligne
+est un arbre ; la colonne de droite est la valeur démontrée, pas une syntaxe supplémentaire.
+
+| Arbre | Valeur | Symboles |
+|---|---|---|
+| X(t) = S(t, 1) | exp(t) | 3 |
+| C = X(X(1)) | e^e | 5 |
+| O = S(1, C) | 0 | 7 |
+| Q(t) = X(S(1, t)) | C / conj(t), t ≠ 0 | 5 |
+| L(t) = S(1, Q(t)) | e − Log(C/t) : un logarithme de t, exp(L(t)) = t, t ≠ 0 | 7 |
+| d(t, r) = S(L(t), X(r)) | t − r, pour t ≠ 0 et r réel | — |
+| n = d(S(1, X(1)), X(1)) | −1 | 17 |
+| k = d(S(O, n), 1) | −iπ (car S(O, n) = 1 − Log(−1) = 1 − iπ) | 35 |
+| h = S(L(k), n) | −2πi : un tour complet | 59 |
+| b = L(h) | un logarithme de h : exp(b) = −2πi | 65 |
+| a = L(S(1, n)) | exp(a) = e − iπ, donc exp(exp(a)) = −C | 25 |
+| P(t) = X(S(a, Q(t))) | −C / conj(Q(t)) = −t, t ≠ 0 : changement de signe | 33 |
+| **J(z) = X(P(S(b, z)))** | **conj(z), z ≠ 0** | **101** |
+
+**Pourquoi c'est strict sur tout ℂ \ {0}.** L'entrée donnée à P est w = S(b, z) = −2πi − Log(conj z). Sa partie
+imaginaire est dans [−3π, −π[ : w n'est jamais nul, même en z = 1 et sur l'axe réel négatif. Le changement de signe
+est donc licite, et J(z) = exp(−w) = exp(2πi) · conj(z) = conj(z). Les calculs n'utilisent que exp(Log u) = u ; ils
+ne remplacent jamais Log(exp u) par u. C'est le « tour complet » (décaler un logarithme intermédiaire de −2πi, que
+l'exponentielle suivante efface) qui évite le zéro intermédiaire.
+
+**Conséquence : la porte eml reconstruite.** Pour y ≠ 0, eml★(x, J(y)) = exp(x) − Log(conj(conj y)) = eml(x, y) :
+103 symboles. En évaluation stricte, toute porte eml d'un arbre mixte peut donc être remplacée par un montage en
+eml★ seule ; les deux grammaires calculent les mêmes fonctions strictes.
+
+| Résultat | Statut | Pièces |
+|---|---|---|
+| Miroir de 297 symboles en eml★ seule (première version, avec un multiplicateur général), J(z) = conj(z) pour z ≠ 0 | ÉTABLI par juge exact : SymPy 1.14.0 sur un symbole complexe non nul et cas particuliers ; encadrements Arb (python-flint 0.9.0) aux points listés ; rejoué par Anthony | `~/EML_replay_20261120_Vw6P7N/` : `replay.py` (sha256 6507109b…), `PROOFS.md` (928217ad…), `replay-console.txt` (ec77fe7a…) |
+| Miroir de 101 symboles : uniquement eml★, feuilles {1, z}, longueur dépliée 101, constantes exactes, identité J(z) = conj(z) sur un symbole complexe non nul et en 9 points exacts (dont −1, −50, e^e), refus strict en 0, eml★(x, J(y)) = eml(x, y), contrôle sans étoile | ÉTABLI par juge exact, deux fois : (1) juge de ChatGPT rejoué par Anthony (sortie « PASS … 297 -> 101 », collée dans la conversation, non archivée en fichier) ; (2) script autonome écrit par Claude sans reprendre ce juge, rejoué par Anthony sur son ThinkCentre : Python 3.12.3, SymPy 1.14.0, 24 contrôles sur 24, code de sortie 0 (trace personnelle `~/EML_101_replay_NSwy5F/`, console sha256 d48f62c4…, identique octet pour octet à celle du dépôt). Ce sont deux implémentations distinctes, toutes deux vérifiées avec SymPy | `miroir_etoile_seule_101.py`, `CONSOLE_20261120_miroir_etoile_seule_101.txt` |
+| Reconstruction indépendante des deux miroirs : 297 et 101 symboles, uniquement eml★, aucun nœud infini ; égalité à conj(z) sur 89 points difficiles (écart < 4·10⁻⁴⁷ ; axe négatif, bords ±π, \|Im\| jusqu'à 100) et en calcul exact SymPy en 5 points dont deux sur l'axe négatif ; refus strict en 0 | OBSERVÉ (échantillon + points exacts) | dossier de travail local `boite_double/` (NON versé au dépôt) : `etoile_seule.py`, `test_boite.py` (37 tests) |
+| Domaine strict = tout ℂ \ {0} (Im w ∈ [−3π, −π[) | DÉRIVÉ : preuve courte ci-dessus, relue par Claude ; à faire relire | ce paragraphe |
+| eml(x, y) = eml★(x, J(y)) pour y ≠ 0 | DÉRIVÉ (une ligne) + juge exact sur des symboles et en 3 points dont y réel négatif (script autonome) | `miroir_etoile_seule_101.py` |
+| Produit strict, partie réelle stricte sur tout le plan (2 489 symboles), porte NAND sur des bits (535 symboles), en eml★ seule | OBSERVÉ sur échantillons (415 couples, 93 points, 4 entrées) ; preuves dans `PROOFS.md`, à relire | dossier local `boite_double/` (non versé), `PROOFS.md` (non versé) |
+| Densité des arbres INDIVIDUELS sur les compacts ; obstruction stricte quand 0 ∈ K et que exp n'est pas injective sur K (exemple K = {0, 2πi}) | NON VÉRIFIÉ ici : preuve écrite de ChatGPT (`PROOFS.md` § 5–6), en attente de relecture indépendante | `PROOFS.md` (non versé au dépôt) |
+| 101 est-il minimal en eml★ seule ? | OUVERT. La recherche exhaustive du § 16 n'a rien trouvé jusqu'à la longueur 19 (heuristique, flottants) : le minimum est donc vraisemblablement entre 21 et 101 | — |
+
+**Précisions de portée.**
+- *En zéro.* Les arbres de ce paragraphe refusent z = 0 en évaluation stricte. Ce n'est pas une impossibilité au seul
+  point 0 (la feuille z y donne la bonne valeur). L'énoncé de ChatGPT, non vérifié ici, est qu'aucun arbre strict ne
+  peut réaliser le miroir à la fois en 0 et en 2πi. Le miroir mixte de 9 symboles du § 16 atteint 0 en évaluation
+  ÉTENDUE.
+- *Le tour complet.* Retirer le décalage −2πi DANS CETTE CONSTRUCTION fait passer l'entrée 1 par ln 0 (contrôle local,
+  non versé). Cela ne prouve pas qu'aucun autre montage ne puisse s'en passer.
+- *Flottants sur la coupure.* En virgule flottante, eml★(x, J(y)) peut différer de eml(x, y) de 2πi quand y est réel
+  négatif (observé en y = −50) : J(y) retombe à 10⁻⁴⁹ près du mauvais côté de l'axe. Le calcul exact donne zéro
+  d'écart. C'est la fragilité numérique déjà signalée sur les bords pour `conjugate_formula` (`eml_toolkit/core.py`), pas un défaut de l'identité.
+- *Les deux miroirs ne répondent pas à la même question.* 9 symboles : le plus court en grammaire mixte, minimal,
+  juste jusqu'en 0 (étendu). 101 symboles : un seul type de porte, strict, hors de 0, minimalité inconnue.
+
+Toujours ouvert : la longueur minimale du miroir en eml★ seule ; la relecture de la preuve de densité ; une relecture
+humaine de l'ensemble.
